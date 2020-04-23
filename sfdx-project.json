@@ -1,0 +1,26 @@
+{
+    "packageDirectories": [
+        {
+            "path": "force-app/packaged",
+            "default": true,
+            "package": "Auto Provisioner",
+            "versionName": "ver 0.1",
+            "versionNumber": "0.1.0.NEXT"
+        },
+        {
+            "path": "force-app/unpackaged",
+            "default": false
+        }
+    ],
+    "namespace": "aprv",
+    "sfdcLoginUrl": "https://login.salesforce.com",
+    "sourceApiVersion": "48.0",
+    "packageAliases": {
+        "Auto Provisioner": "0Ho0N0000004CApSAM",
+        "Auto Provisioner@0.1.0-2": "04t0N00000177FXQAY",
+        "Auto Provisioner@0.1.1-0": "04t0N00000177FcQAI",
+        "Auto Provisioner@0.1.2-0": "04t0N00000177G1QAI",
+        "Auto Provisioner@0.1.3-0": "04t0N00000177G6QAI",
+        "Auto Provisioner@0.1.4-0": "04t0N00000177GpQAI"
+    }
+}
