@@ -11,6 +11,10 @@
     <label>Auto Provisioner</label>
     <navType>Standard</navType>
     <tabs>standard-home</tabs>
+    <tabs>sfLma__Package__c</tabs>
+    <tabs>sfLma__Package_Version__c</tabs>
+    <tabs>Provisioning_Manifest__c</tabs>
+    <tabs>Trialforce_Template__c</tabs>
     <tabs>Subscriber_Authentication__c</tabs>
     <tabs>standard-report</tabs>
     <uiType>Lightning</uiType>
