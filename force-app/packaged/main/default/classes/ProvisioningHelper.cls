@@ -56,4 +56,29 @@ public with sharing class ProvisioningHelper
     {
         
     }
+
+    public static void publishPackageInstallChange(List<Provisioning_Manifest_Package__c> manifestPackages)
+    {
+        List<Provisioner__e> events = new List<Provisioner__e>();
+
+        for(Provisioning_Manifest_Package__c manifestPackage: manifestPackages)
+        {
+            Provisioner__e ev = new Provisioner__e
+            (
+                Package_Version_Id__c = manifestPackage.Package_Version__c,
+                Status__c = manifestPackage.Status__c,
+                OrgId__c = manifestPackage.Provisioning_Manifest__r.Org_Id__c
+            );
+
+            events.add(ev);
+        }
+
+        if(!events.isEmpty())
+        {
+            EventBus.publish(events);
+        }
+    }
+
+    
+
 }
