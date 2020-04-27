@@ -3,21 +3,21 @@ public with sharing class OrgCheckController
     @AuraEnabled(cacheable=true)
     public static boolean checkOrgIsPBO() 
     {
-        return checkOrgIsPBO('SignupRequest');
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static boolean checkOrgIsPBO(string objTypeName) 
-    {
         try 
         {
-            Type objType = Type.forName(objTypeName);
+            Type objType = Type.forName('SignupRequest');
 
-            return true;
+            return objType != null;
         } 
         catch (Exception ex) 
         {
             return false;
         }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<CustomPicklist> getPicklistValues(string objName, string fieldName) 
+    {
+        return ProvisioningHelper.getPickListValues(objName, fieldName);
     }
 }

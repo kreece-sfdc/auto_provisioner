@@ -80,5 +80,34 @@ public with sharing class ProvisioningHelper
     }
 
     
+    public static List<CustomPicklist> getPickListValues(string objName, string fieldName)
+    {
+        List<CustomPicklist> picklistSet = new List<CustomPicklist>();
 
+        try 
+        {
+            Type objType = Type.forName(objName);
+
+            if(objType != null)
+            {
+                sObject objInstance = (sObject)objType.newInstance();
+                
+                if(objInstance != null)
+                {
+                    Schema.DescribeFieldResult fieldResult = objInstance.getsObjectType().getDescribe().fields.getMap().get(fieldName).getDescribe();
+                    
+                    for(Schema.PicklistEntry pickListValue: fieldResult.getPicklistValues())
+                    {
+                        picklistSet.add(new CustomPicklist(pickListValue.value, pickListValue.label));
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            
+        }
+    
+        return picklistSet;
+    }
 }
