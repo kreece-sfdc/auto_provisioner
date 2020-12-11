@@ -1,8 +1,8 @@
 public with sharing class AuthHelper 
 {
-    public static void handleEvent(List<AuthCode__e> items)
+    public static void handleEvent()
     {
-        Map<string, string> responseMap = new Map<string, string>();
+        /*Map<string, string> responseMap = new Map<string, string>();
         List<Subscriber_Authentication__c> subscribers = new List<Subscriber_Authentication__c>();
 
         for(AuthCode__e item : items)
@@ -37,12 +37,12 @@ public with sharing class AuthHelper
         if(!subscribers.isEmpty())
         {
             database.upsert(subscribers, Subscriber_Authentication__c.Name);
-        }
+        }*/
     }
 
     public static string fetchTokens(string code)
     {
-        string tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
+        /*string tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
         
         string client_id = '3MVG9xB_D1giir9oHPrfIWI7ADpVTlTAYCqBMnUM6p1C1sh0tvJqboDk.FErGErUR2jxbRlhJIDCvpX0M6iS_';
         string client_secret = '9E75078F6A26D48758C32106A6140F7BF15A9F0F4951F7D8725DB68CF7E22B0B';
@@ -67,7 +67,8 @@ public with sharing class AuthHelper
         HttpResponse response = http.send(request);
         string responseString = response.getBody();
         
-        return responseString;
+        return responseString;*/
+        return '';
     }
 
     @AuraEnabled(cacheable=true)

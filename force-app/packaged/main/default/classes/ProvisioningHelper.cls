@@ -1,8 +1,8 @@
 public with sharing class ProvisioningHelper 
 {
-    public static void createSignupRequest(Provisioning_Manifest__c manifest)
+    public static void createSignupRequest(Manifest__c manifest)
     {
-        string client_id = '3MVG9xB_D1giir9oHPrfIWI7ADpVTlTAYCqBMnUM6p1C1sh0tvJqboDk.FErGErUR2jxbRlhJIDCvpX0M6iS_';
+        /*string client_id = '3MVG9xB_D1giir9oHPrfIWI7ADpVTlTAYCqBMnUM6p1C1sh0tvJqboDk.FErGErUR2jxbRlhJIDCvpX0M6iS_';
         string client_secret = '9E75078F6A26D48758C32106A6140F7BF15A9F0F4951F7D8725DB68CF7E22B0B';
         string callback_url = 'https://sandbox-test-developer-edition.cs80.force.com';
 
@@ -49,36 +49,8 @@ public with sharing class ProvisioningHelper
             // this is an org where SignupRequest does not exist
             manifest.Notes__c = ex.getMessage();
             update manifest;
-        }
+        }*/
     }
-
-    public static void installPackage(Provisioning_Manifest_Package__c manifestPackage)
-    {
-        
-    }
-
-    public static void publishPackageInstallChange(List<Provisioning_Manifest_Package__c> manifestPackages)
-    {
-        List<Provisioner__e> events = new List<Provisioner__e>();
-
-        for(Provisioning_Manifest_Package__c manifestPackage: manifestPackages)
-        {
-            Provisioner__e ev = new Provisioner__e
-            (
-                Package_Version_Id__c = manifestPackage.Package_Version__c,
-                Status__c = manifestPackage.Status__c,
-                OrgId__c = manifestPackage.Provisioning_Manifest__r.Org_Id__c
-            );
-
-            events.add(ev);
-        }
-
-        if(!events.isEmpty())
-        {
-            EventBus.publish(events);
-        }
-    }
-
     
     public static List<CustomPicklist> getPickListValues(string objName, string fieldName)
     {
