@@ -8,6 +8,24 @@
         <type>Flexipage</type>
         <pageOrSobjectType>standard-home</pageOrSobjectType>
     </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>Action override created by Lightning App Builder during activation.</comment>
+        <content>Manifest_Record_Page1</content>
+        <formFactor>Small</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>Manifest__c</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>Action override created by Lightning App Builder during activation.</comment>
+        <content>Manifest_Record_Page1</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>Manifest__c</pageOrSobjectType>
+    </actionOverrides>
     <brand>
         <headerColor>#0070D2</headerColor>
         <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
@@ -24,6 +42,8 @@
     <tabs>Manifest__c</tabs>
     <tabs>Provisioning_Request__c</tabs>
     <tabs>Trialforce_Template__c</tabs>
+    <tabs>Subscriber_Authentication__c</tabs>
     <tabs>standard-report</tabs>
     <uiType>Lightning</uiType>
+    <utilityBar>Multi_Package_Installer_UtilityBar</utilityBar>
 </CustomApplication>

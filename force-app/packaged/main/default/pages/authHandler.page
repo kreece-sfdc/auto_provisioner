@@ -1,0 +1,9 @@
+<apex:page controller="AuthPageHandler" action="{!Redirect}">
+{!response}    
+{!url}    
+<apex:outputPanel rendered="{!CloseModal == true}">
+        <script>
+            window.close();
+        </script>
+    </apex:outputPanel>
+</apex:page>
