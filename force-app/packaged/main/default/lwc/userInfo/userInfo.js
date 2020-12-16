@@ -1,11 +1,11 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import ACCESS_FIELD from '@salesforce/schema/Subscriber_Authentication__c.Access__c';
-import fetchUserInfo from '@salesforce/apex/AuthHelper.fetchUserInfo';
+import fetchUserInfo from '@salesforce/apex/ProvisioningRequestHandler.fetchUserInfo';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class UserInfo extends LightningElement {
     @api recordId;
-    @track results;
 
     @wire(getRecord, { recordId: '$recordId', fields: [ACCESS_FIELD] }) 
     record;
@@ -13,7 +13,14 @@ export default class UserInfo extends LightningElement {
     handleClick() {
         fetchUserInfo({ access_token: getFieldValue(this.record.data, ACCESS_FIELD) })
         .then(result => {
-            this.results = result;
+            const evt = new ShowToastEvent({
+                title: 'Authentication Check Response',
+                message: result.Message,
+                variant: result.MessageType,
+            });
+            this.dispatchEvent(evt);
+
+            getRecordNotifyChange([{recordId: this.recordId}]);
         })
         .catch(error => {
             console.log('error: ');

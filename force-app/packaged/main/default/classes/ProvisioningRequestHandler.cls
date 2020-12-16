@@ -1,5 +1,15 @@
 public with sharing class ProvisioningRequestHandler
 {
+    public class ComponentResponse
+    {
+        @AuraEnabled
+        public string Message { get; set; }
+        @AuraEnabled
+        public string MessageType { get; set; }
+        @AuraEnabled
+        public boolean ForceRefresh { get; set; }
+    }
+
     @InvocableMethod(label='Create Provisioning Request')
     public static void CreateProvisioningRequest(List<ProvisioningRequest> requests)
     {
@@ -145,5 +155,239 @@ public with sharing class ProvisioningRequestHandler
         }
     
         return picklistSet;
+    }
+
+    @AuraEnabled
+    public static ComponentResponse checkPackageInstall(string record_id)
+    {
+        ComponentResponse response = new ComponentResponse();
+        Provisioning_Request_Package__c provisioningRequestPackage;
+        Subscriber_Authentication__c authRecord;
+
+        boolean refreshedTokens;
+
+        List<Provisioning_Request_Package__c> provisioningRequestPackages = [SELECT Package_Version_Id__c, Package_Version_Password__c, Provisioning_Request__r.Org_Id__c, Job_Id__c FROM Provisioning_Request_Package__c WHERE Id =: record_id];
+
+        if(!provisioningRequestPackages.isEmpty())
+        {
+            provisioningRequestPackage = provisioningRequestPackages[0];
+
+            List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c FROM Subscriber_Authentication__c WHERE Org_Id__c =: provisioningRequestPackage.Provisioning_Request__r.Org_Id__c];
+
+            if(!authRecords.isEmpty())
+            {
+                authRecord = authRecords[0];
+
+                try 
+                {
+                    Map<string, object> responseMap;
+
+                    responseMap = convertToMap(ToolingApiHelper.createPackageInstallStatusRequest(authRecord, provisioningRequestPackage));
+
+                    if(responseMap.containsKey('errorCode') && responseMap.get('errorCode') == 'INVALID_SESSION_ID')
+                    {
+                        authRecord = AuthHelper.refreshAccessToken(authRecord, true);
+                        refreshedTokens = true;
+
+                        responseMap = convertToMap(ToolingApiHelper.createPackageInstallStatusRequest(authRecord, provisioningRequestPackage));
+                    }
+                    
+                    if(responseMap.containsKey('Status'))
+                    {
+                        string status = responseMap.get('Status').toString();
+
+                        if(status == 'InProgress')
+                        {
+                            response.Message = 'The package install is in progress';
+                            response.MessageType = 'info';
+                        }
+                        else if(status == 'Error')
+                        {
+                            response.Message = 'The package install has failed';
+                            response.MessageType = 'error';
+                            response.ForceRefresh = true;
+                        }
+                        else if(status == 'Success')
+                        {
+                            response.Message = 'The package install has succeeded';
+                            response.MessageType = 'success';
+                            response.ForceRefresh = true;
+                        }
+                        else 
+                        {
+                            response.Message = 'The package install status is unknown';
+                            response.MessageType = 'warning';
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    response.Message = ex.getStackTraceString();
+                    response.Message += '\r\n' + ex.getMessage();
+                    response.MessageType = 'error';
+                }
+            }
+        }
+
+        if(refreshedTokens == true)
+        {
+            AuthHelper.refreshAccessToken(authRecord, false);
+        }
+
+        if(response.MessageType == 'error')
+        {
+            provisioningRequestPackage.Status__c = 'Failed';
+            
+        }
+        else if(response.MessageType == 'success')
+        {
+            provisioningRequestPackage.Status__c = 'Succeeded';
+        }
+
+        provisioningRequestPackage.Notes__c = response.Message;
+        upsert provisioningRequestPackage;
+
+        return response;
+    }
+
+    @AuraEnabled
+    public static ComponentResponse InstallPackage(string record_id)
+    {
+        ComponentResponse response = new ComponentResponse();
+        Provisioning_Request_Package__c provisioningRequestPackage;
+        Subscriber_Authentication__c authRecord;
+
+        boolean refreshedTokens;
+        
+        List<Provisioning_Request_Package__c> provisioningRequestPackages = [SELECT Package_Version_Id__c, Package_Version_Password__c, Provisioning_Request__r.Org_Id__c FROM Provisioning_Request_Package__c WHERE Id =: record_id];
+
+        if(!provisioningRequestPackages.isEmpty())
+        {
+            provisioningRequestPackage = provisioningRequestPackages[0];
+
+            List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c FROM Subscriber_Authentication__c WHERE Org_Id__c =: provisioningRequestPackage.Provisioning_Request__r.Org_Id__c];
+
+            if(!authRecords.isEmpty())
+            {
+                authRecord = authRecords[0];
+
+                try 
+                {
+                    Map<string, object> responseMap;
+
+                    responseMap = convertToMap(ToolingApiHelper.createPackageInstallRequest(authRecord, provisioningRequestPackage));
+
+                    if(responseMap.containsKey('errorCode') && responseMap.get('errorCode') == 'INVALID_SESSION_ID')
+                    {
+                        authRecord = AuthHelper.refreshAccessToken(authRecord, true);
+                        refreshedTokens = true;
+
+                        responseMap = convertToMap(ToolingApiHelper.createPackageInstallRequest(authRecord, provisioningRequestPackage));
+                    }
+
+                    if(responseMap.containsKey('success') && responseMap.get('success') == true &&
+                        responseMap.containsKey('id'))
+                    {
+                        provisioningRequestPackage.Job_Id__c = responseMap.get('id').toString();
+
+                        response.Message = 'Successful request!';
+                        response.MessageType = 'success';
+                        response.ForceRefresh = true;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    response.Message = ex.getStackTraceString();
+                    response.MessageType = 'error';
+                }
+            }
+            else 
+            {
+                response.Message = 'There are no authentication credentials available for this org';
+                response.MessageType = 'error';
+            }
+        }
+        else 
+        {
+            response.Message = 'There are no provisioning packages found';
+            response.MessageType = 'error';
+        }
+
+        // needs to be done here so there are no uncommitted changes before a callout.
+        if(refreshedTokens == true)
+        {
+            AuthHelper.refreshAccessToken(authRecord, false);
+        }
+
+        if(response.MessageType == 'error')
+        {
+            provisioningRequestPackage.Status__c = 'Failed';
+            
+        }
+        else if(response.MessageType == 'success')
+        {
+            provisioningRequestPackage.Status__c = 'In Progress';
+        }
+
+        provisioningRequestPackage.Notes__c = response.Message;
+        upsert provisioningRequestPackage;
+
+        return response;
+        
+    }
+
+    static Map<string, object> convertToMap(string response)
+    {
+        system.debug(response);
+
+        if(response.startsWith('['))
+        {
+            List<object> responseListMap = convertToListMap(response);
+            return convertToMap(responseListMap[0]);
+        }
+
+        return (Map<string, object>)JSON.deserializeUntyped(response);
+    }
+
+    static Map<string, object> convertToMap(object response)
+    {
+        return (Map<string, object>)JSON.deserializeUntyped(JSON.serialize(response));
+    }
+
+    static List<object> convertToListMap(string response)
+    {
+        return (List<object>)JSON.deserializeUntyped(response);
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static ComponentResponse fetchUserInfo(string access_token)
+    {
+        ComponentResponse response = new ComponentResponse();
+
+        string userInfoUrl = 'https://login.salesforce.com/services/oauth2/userinfo';
+        
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint(userInfoUrl);
+        request.setMethod('GET');
+        request.setHeader('Authorization', 'Bearer ' + access_token);
+
+        Http http = new Http();
+        HttpResponse httpresponse = http.send(request);
+        
+        Map<string, object> responseMap = convertToMap(httpresponse.getBody());
+
+        if(responseMap.containsKey('user_id'))
+        {
+            response.Message = 'Authentication Details are currently valid';
+            response.MessageType = 'success';
+        }
+        else
+        {
+            response.Message = 'Authentication Details are currently invalid';
+            response.MessageType = 'error';
+        }
+        
+        return response;
     }
 }

@@ -7,9 +7,25 @@ public with sharing class AuthPageHandler
         if(ApexPages.currentPage().getParameters().containsKey('code'))
         {
             string authCode = ApexPages.currentPage().getParameters().get('code');
-            system.debug(authCode);
             // callout to get the access/refresh token
             boolean successful = AuthHelper.fetchTokens(authCode);
+            
+            if(successful) 
+            {
+                CloseModal = true;
+            }
+        }
+
+        return null;
+    }
+
+    public PageReference RedirectSandbox()
+    {
+        if(ApexPages.currentPage().getParameters().containsKey('code'))
+        {
+            string authCode = ApexPages.currentPage().getParameters().get('code');
+            // callout to get the access/refresh token
+            boolean successful = AuthHelper.fetchTokensSandbox(authCode);
             
             if(successful) 
             {

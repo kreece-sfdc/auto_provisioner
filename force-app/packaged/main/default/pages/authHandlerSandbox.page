@@ -1,4 +1,4 @@
-<apex:page controller="AuthPageHandler" action="{!Redirect}"> 
+<apex:page controller="AuthPageHandler" action="{!RedirectSandbox}"> 
 <apex:outputPanel rendered="{!CloseModal == true}">
         <script>
             window.close();
