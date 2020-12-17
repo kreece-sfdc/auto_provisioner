@@ -1,15 +1,5 @@
 public with sharing class ProvisioningRequestHandler
 {
-    public class ComponentResponse
-    {
-        @AuraEnabled
-        public string Message { get; set; }
-        @AuraEnabled
-        public string MessageType { get; set; }
-        @AuraEnabled
-        public boolean ForceRefresh { get; set; }
-    }
-
     @InvocableMethod(label='Create Provisioning Request')
     public static void CreateProvisioningRequest(List<ProvisioningRequest> requests)
     {
@@ -160,11 +150,10 @@ public with sharing class ProvisioningRequestHandler
     @AuraEnabled
     public static ComponentResponse checkPackageInstall(string record_id)
     {
-        ComponentResponse response = new ComponentResponse();
+        ComponentResponse componentResponse = new ComponentResponse();
         Provisioning_Request_Package__c provisioningRequestPackage;
         Subscriber_Authentication__c authRecord;
 
-        boolean refreshedTokens;
 
         List<Provisioning_Request_Package__c> provisioningRequestPackages = [SELECT Package_Version_Id__c, Package_Version_Password__c, Provisioning_Request__r.Org_Id__c, Job_Id__c FROM Provisioning_Request_Package__c WHERE Id =: record_id];
 
@@ -178,88 +167,66 @@ public with sharing class ProvisioningRequestHandler
             {
                 authRecord = authRecords[0];
 
-                try 
+                ApiResponse response = ToolingApiHelper.performPackageInstallStatusRequest(provisioningRequestPackage, authRecord);
+
+                if(response.Status == 'error')
                 {
-                    Map<string, object> responseMap;
+                    componentResponse.MessageType = 'error';
+                    componentResponse.Message = 'The package install has failed.';
 
-                    responseMap = convertToMap(ToolingApiHelper.createPackageInstallStatusRequest(authRecord, provisioningRequestPackage));
-
-                    if(responseMap.containsKey('errorCode') && responseMap.get('errorCode') == 'INVALID_SESSION_ID')
-                    {
-                        authRecord = AuthHelper.refreshAccessToken(authRecord, true);
-                        refreshedTokens = true;
-
-                        responseMap = convertToMap(ToolingApiHelper.createPackageInstallStatusRequest(authRecord, provisioningRequestPackage));
-                    }
+                    provisioningRequestPackage.Status__c = 'Failed';
                     
-                    if(responseMap.containsKey('Status'))
-                    {
-                        string status = responseMap.get('Status').toString();
-
-                        if(status == 'InProgress')
-                        {
-                            response.Message = 'The package install is in progress';
-                            response.MessageType = 'info';
-                        }
-                        else if(status == 'Error')
-                        {
-                            response.Message = 'The package install has failed';
-                            response.MessageType = 'error';
-                            response.ForceRefresh = true;
-                        }
-                        else if(status == 'Success')
-                        {
-                            response.Message = 'The package install has succeeded';
-                            response.MessageType = 'success';
-                            response.ForceRefresh = true;
-                        }
-                        else 
-                        {
-                            response.Message = 'The package install status is unknown';
-                            response.MessageType = 'warning';
-                        }
-                    }
                 }
-                catch (Exception ex)
+                else if(response.Status == 'success')
                 {
-                    response.Message = ex.getStackTraceString();
-                    response.Message += '\r\n' + ex.getMessage();
-                    response.MessageType = 'error';
+                    componentResponse.MessageType = 'success';
+                    componentResponse.Message = 'The package install has succeeded.';
+
+                    provisioningRequestPackage.Status__c = 'Succeeded';
                 }
+                else if(response.Status == 'in progress')
+                {
+                    componentResponse.MessageType = 'info';
+                    componentResponse.Message = 'The package install is in progress.';
+
+                    provisioningRequestPackage.Status__c = 'In Progress';
+                }
+                else if(response.Status == 'unknown')
+                {
+                    componentResponse.MessageType = 'warning';
+                    componentResponse.Message = 'The package install status is unknown.';
+
+                    provisioningRequestPackage.Status__c = 'In Progress';
+                }
+
+                provisioningRequestPackage.Notes__c = response.Message;
+
+                upsert provisioningRequestPackage;
+            }
+            else 
+            {
+                componentResponse.Message = 'There are no authentication credentials available for this org';
+                componentResponse.MessageType = 'error';
             }
         }
-
-        if(refreshedTokens == true)
+        else 
         {
-            AuthHelper.refreshAccessToken(authRecord, false);
+            componentResponse.Message = 'There are no provisioning packages found';
+            componentResponse.MessageType = 'error';
         }
 
-        if(response.MessageType == 'error')
-        {
-            provisioningRequestPackage.Status__c = 'Failed';
-            
-        }
-        else if(response.MessageType == 'success')
-        {
-            provisioningRequestPackage.Status__c = 'Succeeded';
-        }
-
-        provisioningRequestPackage.Notes__c = response.Message;
-        upsert provisioningRequestPackage;
-
-        return response;
+        return componentResponse;
     }
 
     @AuraEnabled
     public static ComponentResponse InstallPackage(string record_id)
     {
-        ComponentResponse response = new ComponentResponse();
+        ComponentResponse componentResponse = new ComponentResponse();
         Provisioning_Request_Package__c provisioningRequestPackage;
         Subscriber_Authentication__c authRecord;
 
-        boolean refreshedTokens;
-        
-        List<Provisioning_Request_Package__c> provisioningRequestPackages = [SELECT Package_Version_Id__c, Package_Version_Password__c, Provisioning_Request__r.Org_Id__c FROM Provisioning_Request_Package__c WHERE Id =: record_id];
+
+        List<Provisioning_Request_Package__c> provisioningRequestPackages = [SELECT Package_Version_Id__c, Package_Version_Password__c, Provisioning_Request__r.Org_Id__c, Job_Id__c FROM Provisioning_Request_Package__c WHERE Id =: record_id];
 
         if(!provisioningRequestPackages.isEmpty())
         {
@@ -271,123 +238,74 @@ public with sharing class ProvisioningRequestHandler
             {
                 authRecord = authRecords[0];
 
-                try 
+                ApiResponse response = ToolingApiHelper.performPackageInstallRequest(provisioningRequestPackage, authRecord);
+
+                if(response.Status == 'error')
                 {
-                    Map<string, object> responseMap;
+                    componentResponse.MessageType = 'error';
+                    componentResponse.Message = 'The package installation request has failed.';
 
-                    responseMap = convertToMap(ToolingApiHelper.createPackageInstallRequest(authRecord, provisioningRequestPackage));
-
-                    if(responseMap.containsKey('errorCode') && responseMap.get('errorCode') == 'INVALID_SESSION_ID')
-                    {
-                        authRecord = AuthHelper.refreshAccessToken(authRecord, true);
-                        refreshedTokens = true;
-
-                        responseMap = convertToMap(ToolingApiHelper.createPackageInstallRequest(authRecord, provisioningRequestPackage));
-                    }
-
-                    if(responseMap.containsKey('success') && responseMap.get('success') == true &&
-                        responseMap.containsKey('id'))
-                    {
-                        provisioningRequestPackage.Job_Id__c = responseMap.get('id').toString();
-
-                        response.Message = 'Successful request!';
-                        response.MessageType = 'success';
-                        response.ForceRefresh = true;
-                    }
-
+                    provisioningRequestPackage.Status__c = 'Failed';
+                    
                 }
-                catch (Exception ex)
+                else if(response.Status == 'success')
                 {
-                    response.Message = ex.getStackTraceString();
-                    response.MessageType = 'error';
+                    componentResponse.MessageType = 'success';
+                    componentResponse.Message = 'The package installation request has succeeded.';
+                    provisioningRequestPackage.Job_Id__c = response.Id;
+
+                    provisioningRequestPackage.Status__c = 'In Progress';
                 }
+                
+
+                provisioningRequestPackage.Notes__c = response.Message;
+
+                upsert provisioningRequestPackage;
             }
             else 
             {
-                response.Message = 'There are no authentication credentials available for this org';
-                response.MessageType = 'error';
+                componentResponse.Message = 'There are no authentication credentials available for this org';
+                componentResponse.MessageType = 'error';
             }
         }
         else 
         {
-            response.Message = 'There are no provisioning packages found';
-            response.MessageType = 'error';
+            componentResponse.Message = 'There are no provisioning packages found';
+            componentResponse.MessageType = 'error';
         }
 
-        // needs to be done here so there are no uncommitted changes before a callout.
-        if(refreshedTokens == true)
-        {
-            AuthHelper.refreshAccessToken(authRecord, false);
-        }
+        return componentResponse;
+        
+    }
 
-        if(response.MessageType == 'error')
+
+    @AuraEnabled
+    public static ComponentResponse fetchUserInfo(string record_id)
+    {
+        ComponentResponse componentResponse = new ComponentResponse();
+        Subscriber_Authentication__c authRecord;
+
+        List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c FROM Subscriber_Authentication__c WHERE Id =: record_id];
+
+        if(!authRecords.isEmpty())
         {
-            provisioningRequestPackage.Status__c = 'Failed';
+            authRecord = authRecords[0];
+
+            ApiResponse response = ToolingApiHelper.performUserInfoRequest(authRecord);
             
+            componentResponse.MessageType = response.Status;
+            componentResponse.Message = response.Message;
+
+            authRecord.Notes__c = response.Message;
+
+            upsert authRecord;
         }
-        else if(response.MessageType == 'success')
+        else 
         {
-            provisioningRequestPackage.Status__c = 'In Progress';
+            componentResponse.Message = 'There are no authentication credentials available for this org';
+            componentResponse.MessageType = 'error';
         }
 
-        provisioningRequestPackage.Notes__c = response.Message;
-        upsert provisioningRequestPackage;
-
-        return response;
-        
-    }
-
-    static Map<string, object> convertToMap(string response)
-    {
-        system.debug(response);
-
-        if(response.startsWith('['))
-        {
-            List<object> responseListMap = convertToListMap(response);
-            return convertToMap(responseListMap[0]);
-        }
-
-        return (Map<string, object>)JSON.deserializeUntyped(response);
-    }
-
-    static Map<string, object> convertToMap(object response)
-    {
-        return (Map<string, object>)JSON.deserializeUntyped(JSON.serialize(response));
-    }
-
-    static List<object> convertToListMap(string response)
-    {
-        return (List<object>)JSON.deserializeUntyped(response);
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static ComponentResponse fetchUserInfo(string access_token)
-    {
-        ComponentResponse response = new ComponentResponse();
-
-        string userInfoUrl = 'https://login.salesforce.com/services/oauth2/userinfo';
-        
-        HttpRequest request = new HttpRequest();
-        request.setEndpoint(userInfoUrl);
-        request.setMethod('GET');
-        request.setHeader('Authorization', 'Bearer ' + access_token);
-
-        Http http = new Http();
-        HttpResponse httpresponse = http.send(request);
-        
-        Map<string, object> responseMap = convertToMap(httpresponse.getBody());
-
-        if(responseMap.containsKey('user_id'))
-        {
-            response.Message = 'Authentication Details are currently valid';
-            response.MessageType = 'success';
-        }
-        else
-        {
-            response.Message = 'Authentication Details are currently invalid';
-            response.MessageType = 'error';
-        }
-        
-        return response;
+        return componentResponse;
     }
 }
