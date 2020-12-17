@@ -139,6 +139,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Provisioning_Request__c.SignupRequest_Id__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Provisioning_Request__c.Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -169,12 +174,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Subscriber_Authentication__c.Org_Id__c</field>
+        <field>Subscriber_Authentication__c.IsSandbox__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Subscriber_Authentication__c.Notes__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Subscriber_Authentication__c.Org_Id__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

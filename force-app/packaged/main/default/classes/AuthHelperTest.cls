@@ -6,7 +6,7 @@ public with sharing class AuthHelperTest
     {
         Test.setMock(HttpCalloutMock.class, new AuthCalloutMock());
 
-        boolean resp = AuthHelper.fetchTokens('code');
+        boolean resp = AuthHelper.fetchTokens('code', false);
 
         system.assertEquals(true, resp);
     }
@@ -15,9 +15,23 @@ public with sharing class AuthHelperTest
     static void FetchUserInfoTest()
     {
         Test.setMock(HttpCalloutMock.class, new AuthCalloutMock());
-        string resp = AuthHelper.fetchUserInfo('access_token');
 
-        system.assertNotEquals(null, resp);
+        Subscriber_Authentication__c authRecord = new Subscriber_Authentication__c
+        (
+            Access__c = 'access', 
+            Instance__c = 'instance', 
+            Refresh__c = 'refresh', 
+            Org_Id__c = 'orgid', 
+            User__c = 'userid',
+            IsSandbox__c = true
+        );
+        insert authRecord;
+        
+        Test.startTest();
+        ComponentResponse resp = ProvisioningRequestHandler.fetchUserInfo(authRecord.Id);
+        Test.stopTest();
+
+        system.assertNotEquals('success', resp.MessageType);
     }
 
     @isTest
@@ -27,6 +41,7 @@ public with sharing class AuthHelperTest
 
         system.assertNotEquals(null, resp);
     }
+
 
     @isTest
     static void AuthControllerTest()

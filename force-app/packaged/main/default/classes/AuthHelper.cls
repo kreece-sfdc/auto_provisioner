@@ -2,12 +2,16 @@ public with sharing class AuthHelper
 {
     public static string CLIENTID  = '3MVG9od6vNol.eBiHujuKURMTk0yi1iShepB1TVy_JU9A3ufTpsl63_pDDk2BKzHAF5ETYAUh3LHO3UX3XmCP';
     public static string CLIENTSECRET = 'FEEC700CDE23798D8C1D3B911807772E4BBF3CD7D57F3F83660B30D1BDB82E99';
-    public static string REDIRECTURL = URL.getSalesforceBaseUrl().toExternalForm() + '/apex/authHandler';
-    public static string REDIRECTURLSANDBOX = URL.getSalesforceBaseUrl().toExternalForm() + '/apex/authHandlerSandbox';
+    public static string REDIRECTURIBASE = URL.getSalesforceBaseUrl().toExternalForm();
+
+    public static string REDIRECTURLPRODUCTION = REDIRECTURIBASE + '/apex/authHandler';
+    public static string REDIRECTURLSANDBOX = REDIRECTURIBASE + '/apex/authHandlerSandbox';
     
-    public static boolean fetchTokensAll(string code, boolean isSandbox)
+
+    static boolean fetchTokens(string code, boolean isSandbox, string client_id, string client_secret, string redirect_uri)
     {
         string tokenEndpoint;
+        string authHeader;
 
         if(isSandbox == true) 
         {
@@ -18,23 +22,26 @@ public with sharing class AuthHelper
             tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
         }
         
-        string client_id = '';
-        string client_secret = '';
-            
         List<string> params = new List<string>();
         params.add('grant_type=' + 'authorization_code');
-        params.add('client_id=' + CLIENTID);
-        params.add('client_secret=' + CLIENTSECRET);
-        params.add('redirect_uri=' + REDIRECTURL);
+        params.add('client_id=' + client_id);
+        params.add('redirect_uri=' + redirect_uri);
         params.add('code=' + code);
-        
-        string authHeader = EncodingUtil.base64Encode(Blob.valueOf(client_id + ':' + client_secret));
+
+        if(client_secret != null)
+        {
+            params.add('client_secret=' + client_secret);
+            authHeader = EncodingUtil.base64Encode(Blob.valueOf(client_id + ':' + client_secret));
+        }
         
         tokenEndpoint += string.join(params, '&');
 
         HttpRequest request = new HttpRequest();
         request.setEndpoint(tokenEndpoint);
-        request.setHeader('Authorization', 'Basic ' + authHeader);
+        if(authHeader != null)
+        {
+            request.setHeader('Authorization', 'Basic ' + authHeader);
+        }
         request.setMethod('POST');
 
         Http http = new Http();
@@ -59,6 +66,8 @@ public with sharing class AuthHelper
         {
             auth.Instance__c = dataMap.get('instance_url').toString();
         }
+
+        auth.IsSandbox__c = isSandbox;
 
         if(dataMap.containsKey('id')) 
         {
@@ -86,31 +95,46 @@ public with sharing class AuthHelper
         return false;
     }
 
-    public static boolean fetchTokens(string code)
+    public static boolean fetchTokens(string code, boolean isSandbox)
     {
-        return fetchTokensAll(code, false);
+        if(isSandbox == true)
+        {
+            return fetchTokens(code, true, CLIENTID, CLIENTSECRET, REDIRECTURLSANDBOX); 
+        }
+
+        return fetchTokens(code, false, CLIENTID, CLIENTSECRET, REDIRECTURLPRODUCTION);
     }
 
-    public static boolean fetchTokensSandbox(string code)
+    /*public static boolean fetchTokensSandbox(string code)
     {
-        return fetchTokensAll(code, true);
-    }
+        return fetchTokens(code, true, CLIENTID, CLIENTSECRET, REDIRECTURLSANDBOX);
+    }*/
 
-    public static Subscriber_Authentication__c refreshAccessToken(Subscriber_Authentication__c auth, boolean silently)
+    static Subscriber_Authentication__c refreshAccessToken(Subscriber_Authentication__c auth, boolean silently, boolean isSandbox)
     {
-        string tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
-        
-        string client_id = '';
-        string client_secret = '';
-            
+        string tokenEndpoint;
+        string redirect_uri;
+
+        if(isSandbox == true) 
+        {
+            tokenEndpoint = 'https://test.salesforce.com/services/oauth2/token?';
+            redirect_uri = REDIRECTURLSANDBOX;
+        }
+        else 
+        {
+            tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
+            redirect_uri = REDIRECTURLPRODUCTION;
+        }
+
+
         List<string> params = new List<string>();
         params.add('grant_type=' + 'refresh_token');
         params.add('client_id=' + CLIENTID);
         params.add('client_secret=' + CLIENTSECRET);
-        params.add('redirect_uri=' + REDIRECTURL);
+        params.add('redirect_uri=' + redirect_uri);
         params.add('refresh_token=' + auth.Refresh__c);
         
-        string authHeader = EncodingUtil.base64Encode(Blob.valueOf(client_id + ':' + client_secret));
+        string authHeader = EncodingUtil.base64Encode(Blob.valueOf(CLIENTID + ':' + CLIENTSECRET));
         
         tokenEndpoint += string.join(params, '&');
 
@@ -149,13 +173,18 @@ public with sharing class AuthHelper
         return null;
     }
 
+    public static Subscriber_Authentication__c refreshAccessToken(Subscriber_Authentication__c auth, boolean silently)
+    {
+        return refreshAccessToken(auth, silently, auth.IsSandbox__c);
+    }
+
     @AuraEnabled
     public static string GenerateOrgAuthInitialiser()
     {
         List<string> parts = new List<string>{ 'https://login.salesforce.com/services/oauth2/authorize?response_type=code' };
         parts.add('client_id=' + CLIENTID);
         parts.add('client_secret=' + CLIENTSECRET);
-        parts.add('redirect_uri=' + REDIRECTURL);
+        parts.add('redirect_uri=' + REDIRECTURLPRODUCTION);
         parts.add('scope=refresh_token+full');
         
 		return string.join(parts, '&');

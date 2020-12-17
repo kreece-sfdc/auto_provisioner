@@ -3,9 +3,7 @@ public with sharing class OrgCheckController
     @AuraEnabled(cacheable=true)
     public static boolean checkOrgIsPBO() 
     {
-        Type objType = Type.forName('SignupRequest');
-
-        return objType != null;
+        return ProvisioningRequestHandler.isPBO();
     }
 
     @AuraEnabled(cacheable=true)

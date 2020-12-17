@@ -68,7 +68,7 @@ public with sharing class ProvisioningRequestHandler
     {
         string client_id = AuthHelper.CLIENTID;
         string client_secret = AuthHelper.CLIENTSECRET;
-        string callback_url = AuthHelper.REDIRECTURL;
+        string callback_url = AuthHelper.REDIRECTURLPRODUCTION;
 
 
         Map<string, object> dataMap = new Map<string, object>();
@@ -105,9 +105,10 @@ public with sharing class ProvisioningRequestHandler
 
             if(!Test.isRunningTest())
             {
-                insert signupRequest;
+                database.insert(signupRequest);
 
                 provisioningRequest.Status__c = 'In Progress';
+                provisioningRequest.SignupRequest_Id__c = signupRequest.Id;
             }
         } 
         catch (Exception ex) 
@@ -161,7 +162,7 @@ public with sharing class ProvisioningRequestHandler
         {
             provisioningRequestPackage = provisioningRequestPackages[0];
 
-            List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c FROM Subscriber_Authentication__c WHERE Org_Id__c =: provisioningRequestPackage.Provisioning_Request__r.Org_Id__c];
+            List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c, IsSandbox__c FROM Subscriber_Authentication__c WHERE Org_Id__c =: provisioningRequestPackage.Provisioning_Request__r.Org_Id__c];
 
             if(!authRecords.isEmpty())
             {
@@ -232,7 +233,7 @@ public with sharing class ProvisioningRequestHandler
         {
             provisioningRequestPackage = provisioningRequestPackages[0];
 
-            List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c FROM Subscriber_Authentication__c WHERE Org_Id__c =: provisioningRequestPackage.Provisioning_Request__r.Org_Id__c];
+            List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c, IsSandbox__c FROM Subscriber_Authentication__c WHERE Org_Id__c =: provisioningRequestPackage.Provisioning_Request__r.Org_Id__c];
 
             if(!authRecords.isEmpty())
             {
@@ -278,14 +279,13 @@ public with sharing class ProvisioningRequestHandler
         
     }
 
-
     @AuraEnabled
     public static ComponentResponse fetchUserInfo(string record_id)
     {
         ComponentResponse componentResponse = new ComponentResponse();
         Subscriber_Authentication__c authRecord;
 
-        List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c FROM Subscriber_Authentication__c WHERE Id =: record_id];
+        List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c, IsSandbox__c FROM Subscriber_Authentication__c WHERE Id =: record_id];
 
         if(!authRecords.isEmpty())
         {
@@ -307,5 +307,103 @@ public with sharing class ProvisioningRequestHandler
         }
 
         return componentResponse;
+    }
+
+    public static Provisioning_Request__c GetNextProvisioningRequestToSignup()
+    {
+        List<Provisioning_Request__c> inProgressProvisioningRequests = [SELECT SignupRequest_Id__c, Status__c FROM Provisioning_Request__c WHERE Status__c = 'In Progress'];
+
+        if(!inProgressProvisioningRequests.isEmpty())
+        {
+            throw new SignupInProgressException(inProgressProvisioningRequests.get(0));
+        }
+
+        List<Provisioning_Request__c> provisioningRequests = [SELECT Id, Name, Company__c, Country__c, FirstName__c, LastName__c, Notes__c, Org_Id__c, PreferredEdition__c, PreferredLanguage__c, SignupEmail__c, Status__c, Subdomain__c, TrialDays__c, Trialforce_Template_Id__c, Username__c, CreatedDate FROM Provisioning_Request__c WHERE Status__c = 'Not Started' AND Org_Id__c = '' ORDER BY CreatedDate ASC];
+
+        if(!provisioningRequests.isEmpty())
+        {
+            return provisioningRequests.get(0);
+        }
+        
+        return null;
+    }
+
+    public static void SignupNextOrg()
+    {
+        try 
+        {
+            Provisioning_Request__c provisioningRequest = GetNextProvisioningRequestToSignup();
+
+            if(provisioningRequest != null)
+            {
+                CreateOrgSignupRequest(provisioningRequest);
+            }
+        } 
+        catch (SignupInProgressException ex) 
+        {
+            // Success, In Progress, Error
+            // There is a signup in progress, and we could trigger off the SignupRequest object, but it doesn't exist anywhere
+            // but in the PBO, so we need to query it based on the SignupRequest.Id, this is stored in the exception cause.
+
+            system.debug(ex.getRecord());
+
+            Provisioning_Request__c provisioningRequest = ex.getRecord();
+
+            if(provisioningRequest != null && provisioningRequest.SignupRequest_Id__c != null)
+            {
+                string signupRequestId = provisioningRequest.SignupRequest_Id__c;
+
+                string signupRequestQuery = 'SELECT AuthCode, ConnectedAppCallbackUrl, ConnectedAppConsumerKey, CreatedOrgId, ErrorCode, ResolvedTemplateId, Status FROM SignupRequest WHERE Id =: signupRequestId';
+
+                if(isPBO())
+                {
+                    List<sObject> results = Database.query(signupRequestQuery);
+
+                    if(!results.isEmpty())
+                    {
+                        sObject result = results.get(0);
+
+                        string status = result.get('Status').toString();
+                        string errorCode = result.get('ErrorCode').toString();
+                        string createdOrgId = result.get('CreatedOrgId').toString();
+                        string authCode = result.get('AuthCode').toString();
+                        string connectedAppConsumerKey = result.get('ConnectedAppConsumerKey').toString();
+                        string connectedAppCallbackUrl = result.get('ConnectedAppCallbackUrl').toString();
+                        
+                        if(status == 'Success')
+                        {
+                            // now created a Subscriber Authentication record for this org.
+                            //boolean authResult = AuthHelper.fetchTokens(authCode, false, connectedAppConsumerKey, null, connectedAppCallbackUrl);
+
+                            provisioningRequest.Status__c = 'Succeeded';
+                            provisioningRequest.Org_Id__c = createdOrgId;
+                        }
+                        else if(status == 'Error')
+                        {
+                            provisioningRequest.Status__c = 'Failed';
+                            provisioningRequest.Notes__c = errorCode;
+                        }
+                        else if(status == 'In Progress')
+                        {
+                            provisioningRequest.Status__c = 'In Progress';
+                        }
+                        else 
+                        {
+                            // unknown
+                        }
+                    }
+                }
+
+                database.upsert(provisioningRequest);
+            }
+        }
+        
+    }
+
+    public static boolean isPBO()
+    {
+        Type objType = Type.forName('SignupRequest');
+
+        return objType != null;
     }
 }

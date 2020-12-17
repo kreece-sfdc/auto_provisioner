@@ -8,6 +8,7 @@
     <columns>Username__c</columns>
     <columns>Country__c</columns>
     <columns>Status__c</columns>
+    <columns>CREATED_DATE</columns>
     <filterScope>Everything</filterScope>
     <label>All</label>
 </ListView>

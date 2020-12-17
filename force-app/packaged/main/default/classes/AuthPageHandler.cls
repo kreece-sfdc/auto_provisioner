@@ -8,7 +8,7 @@ public with sharing class AuthPageHandler
         {
             string authCode = ApexPages.currentPage().getParameters().get('code');
             // callout to get the access/refresh token
-            boolean successful = AuthHelper.fetchTokens(authCode);
+            boolean successful = AuthHelper.fetchTokens(authCode, false);
             
             if(successful) 
             {
@@ -25,7 +25,7 @@ public with sharing class AuthPageHandler
         {
             string authCode = ApexPages.currentPage().getParameters().get('code');
             // callout to get the access/refresh token
-            boolean successful = AuthHelper.fetchTokensSandbox(authCode);
+            boolean successful = AuthHelper.fetchTokens(authCode, true);
             
             if(successful) 
             {
