@@ -64,8 +64,9 @@ public with sharing class ProvisioningRequestHandler
         }
     }
 
-    public static void CreateOrgSignupRequest(Provisioning_Request__c provisioningRequest)
+    public static boolean CreateOrgSignupRequest(Provisioning_Request__c provisioningRequest)
     {
+        system.debug(provisioningRequest);
         string client_id = AuthHelper.CLIENTID;
         string client_secret = AuthHelper.CLIENTSECRET;
         string callback_url = AuthHelper.REDIRECTURLPRODUCTION;
@@ -99,23 +100,34 @@ public with sharing class ProvisioningRequestHandler
 
         try 
         {
-            Type objType = Type.forName('SignupRequest');
-
-            sObject signupRequest = (sObject)JSON.deserialize(JSON.serialize(dataMap), objType);
-
-            if(!Test.isRunningTest())
+            if(isPBO())
             {
-                database.insert(signupRequest);
+                Type objType = Type.forName('SignupRequest');
 
-                provisioningRequest.Status__c = 'In Progress';
-                provisioningRequest.SignupRequest_Id__c = signupRequest.Id;
+                sObject signupRequest = (sObject)JSON.deserialize(JSON.serialize(dataMap), objType);
+
+                if(!Test.isRunningTest())
+                {
+                    database.insert(signupRequest);
+
+                    provisioningRequest.Status__c = 'In Progress';
+                    provisioningRequest.SignupRequest_Id__c = signupRequest.Id;
+                }
             }
+            else 
+            {
+                provisioningRequest.Notes__c = 'This is not a PBO therefore there is no signup request to create.';
+            }
+
+            return true;
         } 
         catch (Exception ex) 
         {
             // this is an org where SignupRequest does not exist
             provisioningRequest.Notes__c = ex.getMessage();
             provisioningRequest.Status__c = 'Failed';
+
+            return false;
         }
         finally
         {
@@ -276,7 +288,6 @@ public with sharing class ProvisioningRequestHandler
         }
 
         return componentResponse;
-        
     }
 
     @AuraEnabled
@@ -328,6 +339,66 @@ public with sharing class ProvisioningRequestHandler
         return null;
     }
 
+    static void UpdateInProgressSignup(Provisioning_Request__c provisioningRequest)
+    {
+        if(provisioningRequest != null && provisioningRequest.SignupRequest_Id__c != null)
+        {
+            string signupRequestId = provisioningRequest.SignupRequest_Id__c;
+
+            string signupRequestQuery = 'SELECT AuthCode, ConnectedAppCallbackUrl, ConnectedAppConsumerKey, CreatedOrgId, ErrorCode, ResolvedTemplateId, Status FROM SignupRequest WHERE Id =: signupRequestId';
+
+            if(isPBO())
+            {
+                List<sObject> results = Database.query(signupRequestQuery);
+
+                if(!results.isEmpty())
+                {
+                    sObject result = results.get(0);
+
+                    string status = result.get('Status').toString();
+                    string errorCode = result.get('ErrorCode').toString();
+                    string createdOrgId = result.get('CreatedOrgId').toString();
+                    string authCode = result.get('AuthCode').toString();
+                    string connectedAppConsumerKey = result.get('ConnectedAppConsumerKey').toString();
+                    string connectedAppCallbackUrl = result.get('ConnectedAppCallbackUrl').toString();
+                    
+                    if(status == 'Success')
+                    {
+                        // now created a Subscriber Authentication record for this org.
+                        boolean authResult = AuthHelper.fetchTokens(authCode, false, connectedAppConsumerKey, null, connectedAppCallbackUrl);
+
+                        if(authResult == true)
+                        {
+                            provisioningRequest.Notes__c = 'The SignupRequest was successful, and the Org Credentials were successfully created.';
+                        }
+                        else 
+                        {
+                            provisioningRequest.Notes__c = 'The SignupRequest was successful, but the Org Credentials failed to create.';    
+                        }
+
+                        provisioningRequest.Status__c = 'Succeeded';
+                        provisioningRequest.Org_Id__c = createdOrgId;
+                    }
+                    else if(status == 'Error')
+                    {
+                        provisioningRequest.Status__c = 'Failed';
+                        provisioningRequest.Notes__c = errorCode;
+                    }
+                    else if(status == 'In Progress')
+                    {
+                        provisioningRequest.Status__c = 'In Progress';
+                    }
+                    else 
+                    {
+                        // unknown
+                    }
+                }
+            }
+
+            database.upsert(provisioningRequest);
+        }
+    }
+
     public static void SignupNextOrg()
     {
         try 
@@ -349,55 +420,79 @@ public with sharing class ProvisioningRequestHandler
 
             Provisioning_Request__c provisioningRequest = ex.getRecord();
 
-            if(provisioningRequest != null && provisioningRequest.SignupRequest_Id__c != null)
-            {
-                string signupRequestId = provisioningRequest.SignupRequest_Id__c;
-
-                string signupRequestQuery = 'SELECT AuthCode, ConnectedAppCallbackUrl, ConnectedAppConsumerKey, CreatedOrgId, ErrorCode, ResolvedTemplateId, Status FROM SignupRequest WHERE Id =: signupRequestId';
-
-                if(isPBO())
-                {
-                    List<sObject> results = Database.query(signupRequestQuery);
-
-                    if(!results.isEmpty())
-                    {
-                        sObject result = results.get(0);
-
-                        string status = result.get('Status').toString();
-                        string errorCode = result.get('ErrorCode').toString();
-                        string createdOrgId = result.get('CreatedOrgId').toString();
-                        string authCode = result.get('AuthCode').toString();
-                        string connectedAppConsumerKey = result.get('ConnectedAppConsumerKey').toString();
-                        string connectedAppCallbackUrl = result.get('ConnectedAppCallbackUrl').toString();
-                        
-                        if(status == 'Success')
-                        {
-                            // now created a Subscriber Authentication record for this org.
-                            //boolean authResult = AuthHelper.fetchTokens(authCode, false, connectedAppConsumerKey, null, connectedAppCallbackUrl);
-
-                            provisioningRequest.Status__c = 'Succeeded';
-                            provisioningRequest.Org_Id__c = createdOrgId;
-                        }
-                        else if(status == 'Error')
-                        {
-                            provisioningRequest.Status__c = 'Failed';
-                            provisioningRequest.Notes__c = errorCode;
-                        }
-                        else if(status == 'In Progress')
-                        {
-                            provisioningRequest.Status__c = 'In Progress';
-                        }
-                        else 
-                        {
-                            // unknown
-                        }
-                    }
-                }
-
-                database.upsert(provisioningRequest);
-            }
+            UpdateInProgressSignup(provisioningRequest);
         }
         
+    }
+
+    @AuraEnabled
+    public static ComponentResponse SignupOrg(string record_id)
+    {
+        ComponentResponse resp = new ComponentResponse();
+
+        List<Provisioning_Request__c> provisioningRequests = [SELECT Id, Name, Company__c, Country__c, FirstName__c, LastName__c, Notes__c, Org_Id__c, PreferredEdition__c, PreferredLanguage__c, SignupEmail__c, Status__c, Subdomain__c, TrialDays__c, Trialforce_Template_Id__c, Username__c, CreatedDate, SignupRequest_Id__c FROM Provisioning_Request__c WHERE Id =: record_id];
+
+        if(!provisioningRequests.isEmpty())
+        {
+            Provisioning_Request__c provisioningRequest = provisioningRequests.get(0);
+
+            boolean res = CreateOrgSignupRequest(provisioningRequest);
+
+            if(!isPBO())
+            {
+                resp.MessageType = 'warning';
+                resp.Message = 'This is not a PBO therefore there is no signup request to create';
+            }
+            else if(res == true)
+            {
+                resp.MessageType = 'success';
+                resp.Message = 'The signup request succeeded';
+            }
+            else if(res == false)
+            {
+                resp.MessageType = 'error';
+                resp.Message = 'The signup request failed';
+            }
+        
+        }
+
+        return resp;
+    }
+
+    @AuraEnabled
+    public static ComponentResponse CheckOrgSignup(string record_id)
+    {
+        ComponentResponse resp = new ComponentResponse();
+
+        List<Provisioning_Request__c> provisioningRequests = [SELECT Id, Name, Company__c, Country__c, FirstName__c, LastName__c, Notes__c, Org_Id__c, PreferredEdition__c, PreferredLanguage__c, SignupEmail__c, Status__c, Subdomain__c, TrialDays__c, Trialforce_Template_Id__c, Username__c, CreatedDate, SignupRequest_Id__c FROM Provisioning_Request__c WHERE Id =: record_id];
+
+        if(!provisioningRequests.isEmpty())
+        {
+            Provisioning_Request__c provisioningRequest = provisioningRequests.get(0);
+
+            if(provisioningRequest.SignupRequest_Id__c != null)
+            {
+                UpdateInProgressSignup(provisioningRequest);
+
+                if(!isPBO())
+                {
+                    resp.MessageType = 'warning';
+                    resp.Message = 'This is not a PBO therefore there is no signup request to check';
+                }
+                else if(provisioningRequest.Status__c == 'Succeeded')
+                {
+                    resp.MessageType = 'success';
+                    resp.Message = 'The signup request successfully completed';
+                }
+                else if(provisioningRequest.Status__c == 'Failed')
+                {
+                    resp.MessageType = 'error';
+                    resp.Message = 'The signup request failed';
+                }
+            }
+        }
+
+        return resp;
     }
 
     public static boolean isPBO()

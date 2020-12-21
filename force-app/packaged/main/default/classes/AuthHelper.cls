@@ -1,14 +1,14 @@
 public with sharing class AuthHelper 
 {
-    public static string CLIENTID  = '3MVG9od6vNol.eBiHujuKURMTk0yi1iShepB1TVy_JU9A3ufTpsl63_pDDk2BKzHAF5ETYAUh3LHO3UX3XmCP';
-    public static string CLIENTSECRET = 'FEEC700CDE23798D8C1D3B911807772E4BBF3CD7D57F3F83660B30D1BDB82E99';
-    public static string REDIRECTURIBASE = URL.getSalesforceBaseUrl().toExternalForm();
+    public static string CLIENTID  = '3MVG9od6vNol.eBgwqHQKvykALnn_FzxceoVVCNtGKvmwe7D_bJnFwRJ3TQaSUTEgX39fdXpx76m2rDH3YWuV';
+    public static string CLIENTSECRET = 'B1208C0598B041B3680BF09C6D40C9E934257A7EAF970F74EDA288BABB7BA8E9';
+    public static string REDIRECTURIBASE = 'https://dream-enterprise-9883-dev-ed.cs81.my.salesforce.com';//URL.getSalesforceBaseUrl().toExternalForm();
 
     public static string REDIRECTURLPRODUCTION = REDIRECTURIBASE + '/apex/authHandler';
     public static string REDIRECTURLSANDBOX = REDIRECTURIBASE + '/apex/authHandlerSandbox';
     
 
-    static boolean fetchTokens(string code, boolean isSandbox, string client_id, string client_secret, string redirect_uri)
+    public static boolean fetchTokens(string code, boolean isSandbox, string client_id, string client_secret, string redirect_uri)
     {
         string tokenEndpoint;
         string authHeader;
