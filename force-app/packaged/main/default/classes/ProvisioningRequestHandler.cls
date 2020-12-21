@@ -26,6 +26,8 @@ public with sharing class ProvisioningRequestHandler
             Username__c = username
         );
 
+        system.debug(provisioningRequest);
+
         if(string.isNotEmpty(manifestId))
         {
             List<Manifest__c> manifests = [SELECT Id, Name, Trialforce_Template__r.Trialforce_Template_Id__c, (SELECT Ordinal__c, Package_Version__r.sfLma__Version_ID__c, Package_Version__r.Package_Version_Password__c, Package_Version__r.sfLma__Package__r.Namespace__c FROM Manifest_Packages__r) FROM Manifest__c WHERE Id =: manifestId];
@@ -34,7 +36,7 @@ public with sharing class ProvisioningRequestHandler
             {
                 Manifest__c manifest = manifests.get(0);
 
-                if(manifest.Trialforce_Template__r != null)
+                if(manifest.Trialforce_Template__r != null && manifest.Trialforce_Template__r.Trialforce_Template_Id__c != null)
                 {
                     provisioningRequest.Trialforce_Template_Id__c = manifest.Trialforce_Template__r.Trialforce_Template_Id__c;
                     provisioningRequest.PreferredEdition__c = null;
@@ -152,7 +154,7 @@ public with sharing class ProvisioningRequestHandler
                 
                 for(Schema.PicklistEntry pickListValue: fieldResult.getPicklistValues())
                 {
-                    picklistSet.add(new CustomPicklist(pickListValue.value, pickListValue.label));
+                    picklistSet.add(new CustomPicklist(pickListValue.label, pickListValue.value));
                 }
             }
         }
@@ -422,7 +424,6 @@ public with sharing class ProvisioningRequestHandler
 
             UpdateInProgressSignup(provisioningRequest);
         }
-        
     }
 
     @AuraEnabled

@@ -5,6 +5,10 @@
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
+        <apexClass>ApiResponse</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>AuthCalloutMock</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -21,6 +25,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>ComponentResponse</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>CustomPicklist</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -30,6 +38,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>LicenceTriggerHelperTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>MapHelper</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -46,6 +58,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>ProvisioningRequestHandlerTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>SignupInProgressException</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
