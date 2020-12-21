@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ConnectedApp xmlns="http://soap.sforce.com/2006/04/metadata">
+    <contactEmail>kreece@salesforce.com</contactEmail>
+    <label>AuthTestForceData</label>
+    <oauthConfig>
+        <callbackUrl>https://force-data-61272-dev-ed.cs81.my.salesforce.com/apex/authHandler
+https://force-data-61272-dev-ed--aprv.visualforce.com/apex/authHandler
+https://force-data-61272-dev-ed--aprv.visualforce.com/apex/authHandlerSandbox</callbackUrl>
+        <consumerKey>3MVG9od6vNol.eBiHujuKURMTk0yi1iShepB1TVy_JU9A3ufTpsl63_pDDk2BKzHAF5ETYAUh3LHO3UX3XmCP</consumerKey>
+        <isAdminApproved>false</isAdminApproved>
+        <scopes>Full</scopes>
+        <scopes>RefreshToken</scopes>
+    </oauthConfig>
+</ConnectedApp>

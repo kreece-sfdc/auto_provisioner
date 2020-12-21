@@ -1,60 +1,140 @@
 public with sharing class AuthHelper 
 {
-    public static void handleEvent(List<AuthCode__e> items)
+    public static string CLIENTID  = '3MVG9od6vNol.eBiHujuKURMTk0yi1iShepB1TVy_JU9A3ufTpsl63_pDDk2BKzHAF5ETYAUh3LHO3UX3XmCP';
+    public static string CLIENTSECRET = 'FEEC700CDE23798D8C1D3B911807772E4BBF3CD7D57F3F83660B30D1BDB82E99';
+    public static string REDIRECTURIBASE = URL.getSalesforceBaseUrl().toExternalForm();
+
+    public static string REDIRECTURLPRODUCTION = REDIRECTURIBASE + '/apex/authHandler';
+    public static string REDIRECTURLSANDBOX = REDIRECTURIBASE + '/apex/authHandlerSandbox';
+    
+
+    static boolean fetchTokens(string code, boolean isSandbox, string client_id, string client_secret, string redirect_uri)
     {
-        Map<string, string> responseMap = new Map<string, string>();
-        List<Subscriber_Authentication__c> subscribers = new List<Subscriber_Authentication__c>();
+        string tokenEndpoint;
+        string authHeader;
 
-        for(AuthCode__e item : items)
+        if(isSandbox == true) 
         {
-            string resp = fetchTokens(item.Code__c);
-            responseMap.put(item.Code__c, resp);
+            tokenEndpoint = 'https://test.salesforce.com/services/oauth2/token?';
         }
-
-        for(string code : responseMap.keySet())
+        else 
         {
-            Map<string, string> resp = (Map<string, string>)JSON.deserialize(responseMap.get(code), Map<string, string>.class);
-
-            string refresh = resp.get('refresh_token');
-            string access = resp.get('access_token');
-            string instance = resp.get('instance_url');
-
-            List<string> idparts = resp.get('id').split('/');
-            string orgid = idparts.get(idparts.size()-2);
-            string userid = idparts.get(idparts.size()-1);
-
-            Subscriber_Authentication__c subscriber = new Subscriber_Authentication__c
-            (
-                Name = orgid,
-                Refresh__c = refresh,
-                Access__c = access,
-                Instance__c = instance,
-                User__c = userid
-            );
-            subscribers.add(subscriber);
+            tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
         }
-
-        if(!subscribers.isEmpty())
-        {
-            database.upsert(subscribers, Subscriber_Authentication__c.Name);
-        }
-    }
-
-    public static string fetchTokens(string code)
-    {
-        string tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
         
-        string client_id = '3MVG9xB_D1giir9oHPrfIWI7ADpVTlTAYCqBMnUM6p1C1sh0tvJqboDk.FErGErUR2jxbRlhJIDCvpX0M6iS_';
-        string client_secret = '9E75078F6A26D48758C32106A6140F7BF15A9F0F4951F7D8725DB68CF7E22B0B';
-            
         List<string> params = new List<string>();
         params.add('grant_type=' + 'authorization_code');
         params.add('client_id=' + client_id);
-        params.add('redirect_uri=' + 'https://sandbox-test-developer-edition.cs80.force.com');
-        params.add('client_secret=' + client_secret);
+        params.add('redirect_uri=' + redirect_uri);
         params.add('code=' + code);
+
+        if(client_secret != null)
+        {
+            params.add('client_secret=' + client_secret);
+            authHeader = EncodingUtil.base64Encode(Blob.valueOf(client_id + ':' + client_secret));
+        }
         
-        string authHeader = EncodingUtil.base64Encode(Blob.valueOf(client_id + ':' + client_secret));
+        tokenEndpoint += string.join(params, '&');
+
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint(tokenEndpoint);
+        if(authHeader != null)
+        {
+            request.setHeader('Authorization', 'Basic ' + authHeader);
+        }
+        request.setMethod('POST');
+
+        Http http = new Http();
+        HttpResponse response = http.send(request);
+        string responseString = response.getBody();
+
+        Map<string, object> dataMap = (Map<string, object>)JSON.deserializeUntyped(responseString);
+
+        Subscriber_Authentication__c auth = new Subscriber_Authentication__c();
+
+        if(dataMap.containsKey('access_token')) 
+        {
+            auth.Access__c = dataMap.get('access_token').toString();
+        }
+
+        if(dataMap.containsKey('refresh_token')) 
+        {
+            auth.Refresh__c = dataMap.get('refresh_token').toString();
+        }
+
+        if(dataMap.containsKey('instance_url')) 
+        {
+            auth.Instance__c = dataMap.get('instance_url').toString();
+        }
+
+        auth.IsSandbox__c = isSandbox;
+
+        if(dataMap.containsKey('id')) 
+        {
+            string id = dataMap.get('id').toString();
+            List<string> segments = id.split('/');
+
+            string orgId = segments[4];
+            string userId = segments[5];
+
+            auth.Org_Id__c = orgId;
+            auth.User__c = userId;
+        }
+
+        if(auth.Access__c != null &&
+            auth.Refresh__c != null &&
+            auth.Instance__c != null &&
+            auth.Org_Id__c != null &&
+            auth.User__c != null)
+        {
+            database.upsert(auth, Subscriber_Authentication__c.Org_Id__c);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean fetchTokens(string code, boolean isSandbox)
+    {
+        if(isSandbox == true)
+        {
+            return fetchTokens(code, true, CLIENTID, CLIENTSECRET, REDIRECTURLSANDBOX); 
+        }
+
+        return fetchTokens(code, false, CLIENTID, CLIENTSECRET, REDIRECTURLPRODUCTION);
+    }
+
+    /*public static boolean fetchTokensSandbox(string code)
+    {
+        return fetchTokens(code, true, CLIENTID, CLIENTSECRET, REDIRECTURLSANDBOX);
+    }*/
+
+    static Subscriber_Authentication__c refreshAccessToken(Subscriber_Authentication__c auth, boolean silently, boolean isSandbox)
+    {
+        string tokenEndpoint;
+        string redirect_uri;
+
+        if(isSandbox == true) 
+        {
+            tokenEndpoint = 'https://test.salesforce.com/services/oauth2/token?';
+            redirect_uri = REDIRECTURLSANDBOX;
+        }
+        else 
+        {
+            tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
+            redirect_uri = REDIRECTURLPRODUCTION;
+        }
+
+
+        List<string> params = new List<string>();
+        params.add('grant_type=' + 'refresh_token');
+        params.add('client_id=' + CLIENTID);
+        params.add('client_secret=' + CLIENTSECRET);
+        params.add('redirect_uri=' + redirect_uri);
+        params.add('refresh_token=' + auth.Refresh__c);
+        
+        string authHeader = EncodingUtil.base64Encode(Blob.valueOf(CLIENTID + ':' + CLIENTSECRET));
         
         tokenEndpoint += string.join(params, '&');
 
@@ -66,24 +146,59 @@ public with sharing class AuthHelper
         Http http = new Http();
         HttpResponse response = http.send(request);
         string responseString = response.getBody();
-        
-        return responseString;
+
+        Map<string, object> dataMap = (Map<string, object>)JSON.deserializeUntyped(responseString);
+
+        if(dataMap.containsKey('access_token')) 
+        {
+            auth.Access__c = dataMap.get('access_token').toString();
+        }
+
+        if(dataMap.containsKey('refresh_token')) 
+        {
+            auth.Refresh__c = dataMap.get('refresh_token').toString();
+        }
+
+        if(auth.Access__c != null &&
+            auth.Refresh__c != null)
+        {
+            if(!silently)
+            {
+                database.upsert(auth, Subscriber_Authentication__c.Org_Id__c);
+            }
+
+            return auth;
+        }
+
+        return null;
     }
 
-    @AuraEnabled(cacheable=true)
-    public static string fetchUserInfo(string access_token)
+    public static Subscriber_Authentication__c refreshAccessToken(Subscriber_Authentication__c auth, boolean silently)
     {
-        string userInfoUrl = 'https://login.salesforce.com/services/oauth2/userinfo';
+        return refreshAccessToken(auth, silently, auth.IsSandbox__c);
+    }
+
+    @AuraEnabled
+    public static string GenerateOrgAuthInitialiser()
+    {
+        List<string> parts = new List<string>{ 'https://login.salesforce.com/services/oauth2/authorize?response_type=code' };
+        parts.add('client_id=' + CLIENTID);
+        parts.add('client_secret=' + CLIENTSECRET);
+        parts.add('redirect_uri=' + REDIRECTURLPRODUCTION);
+        parts.add('scope=refresh_token+full');
         
-        HttpRequest request = new HttpRequest();
-        request.setEndpoint(userInfoUrl);
-        request.setMethod('GET');
-        request.setHeader('Authorization', 'Bearer ' + access_token);
+		return string.join(parts, '&');
+    }
 
-        Http http = new Http();
-        HttpResponse response = http.send(request);
-        string responseString = response.getBody();
-
-        return responseString;
+    @AuraEnabled
+    public static string GenerateOrgAuthInitialiserSandbox()
+    {
+        List<string> parts = new List<string>{ 'https://test.salesforce.com/services/oauth2/authorize?response_type=code' };
+        parts.add('client_id=' + CLIENTID);
+        parts.add('client_secret=' + CLIENTSECRET);
+        parts.add('redirect_uri=' + REDIRECTURLSANDBOX);
+        parts.add('scope=refresh_token+full');
+        
+		return string.join(parts, '&');
     }
 }

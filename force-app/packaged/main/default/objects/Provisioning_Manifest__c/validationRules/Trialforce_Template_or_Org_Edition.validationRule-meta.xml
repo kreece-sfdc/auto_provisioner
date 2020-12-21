@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Trialforce_Template_or_Org_Edition</fullName>
-    <active>true</active>
-    <errorConditionFormula>Trialforce_Template__c = null  &amp;&amp; Edition__c = null  || 
- Trialforce_Template__c &lt;&gt; null &amp;&amp; Edition__c &lt;&gt; null</errorConditionFormula>
-    <errorMessage>Please select EITHER Trialforce Template or Edition</errorMessage>
-</ValidationRule>

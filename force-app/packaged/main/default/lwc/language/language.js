@@ -5,6 +5,7 @@ export default class Language extends LightningElement
 {
     options = [];
     @api selectedOption;
+    @api flexipageRegionWidth;
 
     handleChange(event) {
         this.selectedOption = event.detail.value;

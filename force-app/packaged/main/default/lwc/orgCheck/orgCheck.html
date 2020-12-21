@@ -1,11 +1,11 @@
 <template>
-    <lightning-card title="Org Checker" icon-name="standard:settings">
+    <lightning-card title="PBO Checker" icon-name="standard:settings">
         <div class="slds-m-around_medium">
             <template if:true={isPBO}>
-                <h1>Success! This is a PBO!</h1>
+                <h1>This <b>IS</b> a <abbr title="Partner Business Org">PBO</abbr>!</h1>
             </template>
             <template if:false={isPBO}>
-                <h1>Fail! This is not a PBO!</h1>
+                <h1>This <b>IS NOT</b> a <abbr title="Partner Business Org">PBO</abbr>!</h1>
             </template>
         </div>
     </lightning-card>

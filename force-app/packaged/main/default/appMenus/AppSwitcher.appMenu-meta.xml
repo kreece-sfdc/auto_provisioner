@@ -65,7 +65,15 @@
         <type>CustomApplication</type>
     </appMenuItems>
     <appMenuItems>
-        <name>aprv__Auto_Provisioner</name>
+        <name>sfLma__LicenseManagementApp</name>
         <type>CustomApplication</type>
+    </appMenuItems>
+    <appMenuItems>
+        <name>aprv__Multi_Package_Installer</name>
+        <type>CustomApplication</type>
+    </appMenuItems>
+    <appMenuItems>
+        <name>AuthTestForceData</name>
+        <type>ConnectedApp</type>
     </appMenuItems>
 </AppMenu>

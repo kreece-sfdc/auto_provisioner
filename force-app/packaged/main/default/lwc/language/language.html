@@ -1,9 +1,11 @@
 <template>
-    <lightning-combobox
-            label="Preferred Language"
-            placeholder="Choose Preferred Language"
-            value={selectedOption}
-            options={options}
-            onchange={handleChange}>
-    </lightning-combobox>
+    <div class={flexipageRegionWidth}>
+        <lightning-combobox
+                label="Preferred Language"
+                placeholder="Choose Preferred Language"
+                value={selectedOption}
+                options={options}
+                onchange={handleChange}>
+        </lightning-combobox>
+    </div>
 </template>
