@@ -42,6 +42,11 @@ public with sharing class ToolingApiHelper
     {
         string url = 'https://login.salesforce.com/services/oauth2/userinfo';
 
+        if(authRecord.IsSandbox__c == true)
+        {
+            url = 'https://test.salesforce.com/services/oauth2/userinfo';
+        }
+        
         HttpRequest request = createApiRequest(url, 'GET', null, authRecord.Access__c);
 
         string response = sendApiRequest(request);

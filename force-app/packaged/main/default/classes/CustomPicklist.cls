@@ -7,6 +7,11 @@ public with sharing class CustomPicklist
 
     public CustomPicklist(string lab, string val)
     {
+        if(val == null)
+        {
+            val = label;
+        }
+        
         this.label = lab;
         this.value = val;
     }

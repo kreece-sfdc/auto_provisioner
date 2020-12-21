@@ -3,9 +3,14 @@
         {
             "path": "force-app/packaged",
             "default": true,
-            "package": "Auto Provisioner",
+            "package": "Multi Package Installer",
             "versionName": "ver 0.1",
-            "versionNumber": "0.1.0.NEXT"
+            "versionNumber": "0.1.0.NEXT",
+            "dependencies": [
+                {
+                    "package": "Licence Management Application@1.20"
+                }
+            ]
         },
         {
             "path": "force-app/unpackaged",
@@ -16,11 +21,8 @@
     "sfdcLoginUrl": "https://login.salesforce.com",
     "sourceApiVersion": "48.0",
     "packageAliases": {
-        "Auto Provisioner": "0Ho0N0000004CApSAM",
-        "Auto Provisioner@0.1.0-2": "04t0N00000177FXQAY",
-        "Auto Provisioner@0.1.1-0": "04t0N00000177FcQAI",
-        "Auto Provisioner@0.1.2-0": "04t0N00000177G1QAI",
-        "Auto Provisioner@0.1.3-0": "04t0N00000177G6QAI",
-        "Auto Provisioner@0.1.4-0": "04t0N00000177GpQAI"
+        "Multi Package Installer": "0Ho5p0000004CBYCA2",
+        "Licence Management Application@1.20": "04t30000001DWL0AAO",
+        "Multi Package Installer@0.1.0-0": "04t5p00000177b4AAA"
     }
 }

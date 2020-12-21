@@ -1,0 +1,17 @@
+<template>
+    
+    <lightning-card title="Authentication Settings" icon-name="standard:settings">
+        <div class="slds-m-around_medium">
+            <lightning-input type="text" label="Client Id" name="client_id" onchange={handleFormInputChange} value={client_id}></lightning-input>
+        </div>
+        <div class="slds-m-around_medium">
+            <lightning-input type="text" label="Client Secret" name="client_secret" onchange={handleFormInputChange} value={client_secret}></lightning-input>
+        </div>
+        <div class="slds-m-around_medium">
+            <lightning-input type="url" label="Callback Uri" name="callback_uri" onchange={handleFormInputChange} value={callback_uri}></lightning-input>
+        </div>
+        <div class="slds-m-around_medium">
+            <lightning-button label="Submit" onclick={handleClick}></lightning-button>
+        </div>
+    </lightning-card>
+</template>

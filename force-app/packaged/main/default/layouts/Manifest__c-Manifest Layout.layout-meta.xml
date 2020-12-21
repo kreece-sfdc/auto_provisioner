@@ -71,6 +71,8 @@
         <fields>Package_Version__c</fields>
         <fields>Ordinal__c</fields>
         <relatedList>Manifest_Package__c.Manifest__c</relatedList>
+        <sortField>Ordinal__c</sortField>
+        <sortOrder>Asc</sortOrder>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
@@ -78,7 +80,7 @@
     <showRunAssignmentRulesCheckbox>false</showRunAssignmentRulesCheckbox>
     <showSubmitAndAttachButton>false</showSubmitAndAttachButton>
     <summaryLayout>
-        <masterLabel>00h26000001JLph</masterLabel>
+        <masterLabel>00h26000001C6z4</masterLabel>
         <sizeX>4</sizeX>
         <sizeY>0</sizeY>
         <summaryLayoutStyle>Default</summaryLayoutStyle>

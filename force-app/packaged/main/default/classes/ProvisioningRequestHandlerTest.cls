@@ -52,6 +52,7 @@ public with sharing class ProvisioningRequestHandlerTest
         (
             Manifest__c = manifest.Id,
             Ordinal__c = 1,
+            Package__c = packageObj.Id,
             Package_Version__c = packageVersion.Id
         );
         insert mp1;
@@ -60,6 +61,7 @@ public with sharing class ProvisioningRequestHandlerTest
         (
             Manifest__c = manifest.Id,
             Ordinal__c = 2,
+            Package__c = packageObj.Id,
             Package_Version__c = packageVersion2.Id
         );
         insert mp2;
@@ -151,6 +153,7 @@ public with sharing class ProvisioningRequestHandlerTest
         (
             Manifest__c = manifest.Id,
             Ordinal__c = 1,
+            Package__c = packageObj.Id,
             Package_Version__c = packageVersion.Id
         );
         insert mp1;
@@ -159,6 +162,7 @@ public with sharing class ProvisioningRequestHandlerTest
         (
             Manifest__c = manifest.Id,
             Ordinal__c = 2,
+            Package__c = packageObj.Id,
             Package_Version__c = packageVersion2.Id
         );
         insert mp2;
@@ -228,6 +232,7 @@ public with sharing class ProvisioningRequestHandlerTest
         (
             Manifest__c = manifest.Id,
             Ordinal__c = 1,
+            Package__c = packageObj.Id,
             Package_Version__c = packageVersion.Id
         );
         insert mp1;
@@ -236,6 +241,7 @@ public with sharing class ProvisioningRequestHandlerTest
         (
             Manifest__c = manifest.Id,
             Ordinal__c = 2,
+            Package__c = packageObj.Id,
             Package_Version__c = packageVersion2.Id
         );
         insert mp2;
