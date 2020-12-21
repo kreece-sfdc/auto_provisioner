@@ -6,11 +6,11 @@
             "package": "Multi Package Installer",
             "versionName": "ver 0.1",
             "versionNumber": "0.1.0.NEXT",
-            "dependencies": [ 
+            "dependencies": [
                 {
-                   "package": "Licence Management Application@1.20"
+                    "package": "Licence Management Application@1.20"
                 }
-             ]
+            ]
         },
         {
             "path": "force-app/unpackaged",
@@ -22,6 +22,7 @@
     "sourceApiVersion": "48.0",
     "packageAliases": {
         "Multi Package Installer": "0Ho5p0000004CBYCA2",
-        "Licence Management Application@1.20": "04t30000001DWL0AAO"
+        "Licence Management Application@1.20": "04t30000001DWL0AAO",
+        "Multi Package Installer@0.1.0-0": "04t5p00000177auAAA"
     }
 }

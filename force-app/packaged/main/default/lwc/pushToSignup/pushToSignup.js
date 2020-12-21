@@ -6,7 +6,7 @@ import SignupOrg from '@salesforce/apex/ProvisioningRequestHandler.SignupOrg';
 import CheckOrgSignup from '@salesforce/apex/ProvisioningRequestHandler.CheckOrgSignup';
 import REQUEST_PACKAGE_ID from '@salesforce/schema/Provisioning_Request_Package__c.Id';
 
-export default class InstallPackage extends LightningElement {
+export default class PushToSignup extends LightningElement {
     @api recordId;
 
     @wire(getRecord, { recordId: '$recordId', fields: [ REQUEST_PACKAGE_ID ] }) 

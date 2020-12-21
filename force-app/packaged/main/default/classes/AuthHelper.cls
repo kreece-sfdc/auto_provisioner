@@ -1,12 +1,45 @@
 public with sharing class AuthHelper 
 {
-    public static string CLIENTID  = '3MVG9od6vNol.eBgwqHQKvykALnn_FzxceoVVCNtGKvmwe7D_bJnFwRJ3TQaSUTEgX39fdXpx76m2rDH3YWuV';
-    public static string CLIENTSECRET = 'B1208C0598B041B3680BF09C6D40C9E934257A7EAF970F74EDA288BABB7BA8E9';
-    public static string REDIRECTURIBASE = 'https://dream-enterprise-9883-dev-ed.cs81.my.salesforce.com';//URL.getSalesforceBaseUrl().toExternalForm();
+    public static string CLIENTID  = GetAuthSettings().Client_Id__c;
+    public static string CLIENTSECRET = GetAuthSettings().Client_Secret__c;
+    public static string REDIRECTURIBASE = GetAuthSettings().Callback_Uri__c;
 
     public static string REDIRECTURLPRODUCTION = REDIRECTURIBASE + '/apex/authHandler';
     public static string REDIRECTURLSANDBOX = REDIRECTURIBASE + '/apex/authHandlerSandbox';
     
+    @AuraEnabled
+    public static Auth_Setting__c SetAuthSettings(string client_id, string client_secret, string redirect_uri)
+    {
+        Auth_Setting__c authSetting = GetAuthSettings();
+
+        if(authSetting == null)
+        {
+            authSetting = new Auth_Setting__c
+            (
+                Client_Id__c = client_id,
+                Client_Secret__c = client_secret,
+                Callback_Uri__c = redirect_uri,
+                SetupOwnerId = UserInfo.getOrganizationId()
+            );
+
+            database.insert(authSetting);
+        }
+        else 
+        {
+            authSetting.Client_Id__c = client_id;
+            authSetting.Client_Secret__c = client_secret;
+            authSetting.Callback_Uri__c = redirect_uri;
+            database.update(authSetting);
+        }
+
+        return authSetting;
+    }
+
+    @AuraEnabled
+    public static Auth_Setting__c GetAuthSettings()
+    {
+        return Auth_Setting__c.getOrgDefaults();
+    }
 
     public static boolean fetchTokens(string code, boolean isSandbox, string client_id, string client_secret, string redirect_uri)
     {

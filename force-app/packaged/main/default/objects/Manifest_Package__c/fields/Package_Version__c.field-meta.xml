@@ -4,6 +4,15 @@
     <deleteConstraint>SetNull</deleteConstraint>
     <externalId>false</externalId>
     <label>Package Version</label>
+    <lookupFilter>
+        <active>true</active>
+        <filterItems>
+            <field>sfLma__Package_Version__c.sfLma__Package__c</field>
+            <operation>equals</operation>
+            <valueField>$Source.Package__c</valueField>
+        </filterItems>
+        <isOptional>false</isOptional>
+    </lookupFilter>
     <referenceTo>sfLma__Package_Version__c</referenceTo>
     <relationshipLabel>Provisioning Manifest Packages</relationshipLabel>
     <relationshipName>Manifest_Packages</relationshipName>

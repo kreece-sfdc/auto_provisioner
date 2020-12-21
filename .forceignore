@@ -13,3 +13,6 @@ package.xml
 **/profiles/**
 **/appMenus/**
 **/connectedApps/**
+
+**/layouts/sfLma**
+**/remoteSiteSettings/customer_**

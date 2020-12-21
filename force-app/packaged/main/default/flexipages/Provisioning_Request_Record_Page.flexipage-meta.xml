@@ -104,12 +104,6 @@
             <componentInstanceProperties>
                 <name>recordId</name>
             </componentInstanceProperties>
-            <componentName>installPackage</componentName>
-        </componentInstances>
-        <componentInstances>
-            <componentInstanceProperties>
-                <name>recordId</name>
-            </componentInstanceProperties>
             <componentName>pushToSignup</componentName>
         </componentInstances>
         <mode>Replace</mode>
