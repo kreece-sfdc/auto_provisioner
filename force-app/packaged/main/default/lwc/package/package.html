@@ -1,0 +1,18 @@
+<template>
+    <template if:true={packageDetails}>
+        <div class="slds-grid slds-grid_vertical package">
+            <div class="slds-col">
+              <span>
+                Package:
+                {packageDetails.package}
+              </span>
+            </div>
+            <div class="slds-col">
+              <span>
+                Package Version:
+                {packageDetails.version}
+              </span>
+            </div>
+        </div>
+    </template>
+</template>
