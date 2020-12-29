@@ -5,24 +5,27 @@
     </div>
     <div class="slds-grid slds-p-around_medium">
         <template if:true={columns} for:each={columns} for:item="column">
-            <div key={column.id} ondrop={handleOndrop} ondragleave={handleOndragleave} data-column={column.id} data-id={item} ondragstart={handleOndragstart} ondragover={handleOndragover}>
-                <div style="background-color:lightblue;color:white;border:1px solid black;">
+            <div style={column.style} key={column.id} ondrop={handleOndrop} ondragleave={handleOndragleave} data-column={column.id} data-id={item} ondragstart={handleOndragstart} ondragover={handleOndragover}>
+                <div class="slds-p-around_xx-small" style="background-color:#1B5297;color:white;border:1px solid black;">
                     <p>Phase {column.id} </p>
                 </div>
                 <div class="slds-scrollable">
                     <template for:each={column.items} for:item="item">
-                        <div key={item} data-column={column.id} data-id={item.id} draggable="true" ondragstart={handleOndragstart} ondragover={handleOndragover} ondragenter={handleOndragenter} >
-                        <!--style="width:100px;height:100px;border:1px dotted black;background-color:brown;transition: 0.3s cubic-bezier(0.2, 1, 0.1, 1);">-->
-                            <c-package data-column={column.id} manifest-package-id={item.id}></c-package>
+                        <div key={item} data-column={column.id} data-id={item.id} draggable="true" ondragstart={handleOndragstart} ondragover={handleOndragover} ondragenter={handleOndragenter} class="column">
+                            <c-package manifest-package-id={item.id} is-duplicate={item.duplicate} data-column={column.id} data-id={item.id} draggable="true" ondragstart={handleOndragstart} ondragover={handleOndragover} ondragenter={handleOndragenter}></c-package>
                         </div>
                     </template>
                 </div>
             </div>
         </template>
-
         <template if:true={showSelectPackageVersionsModal}>
             <c-package-selector selected-package-versions={allPackages} oncancel={handleCloseModals} onsuccess={handleCreateNewManifestPackage}></c-package-selector>
             <!--<c-record-create object-api-name="MHolt__Package_Definition__c" object-name="Package Definition" onsuccess={handleCreateNewPackage} oncancel={handleCloseModals}></c-record-create>-->
         </template>
     </div>
+    <template if:true={duplicatePackages}>
+        <div class="slds-p-around_medium slds-size_1-of-1">
+            Two or more selected package versions in this manifest point to the same package, this is likely to cause failures during installation.
+        </div>
+    </template>
 </template>

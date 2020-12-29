@@ -3,13 +3,13 @@ import { LightningElement, track } from 'lwc';
 export default class PackageInstaller extends LightningElement {
     @track manifestId;
     @track showNewManifestModal = false;
-    @track selectedPackageId;
+    @track showLoadManifestModal = false;
 
     /*
         handleCreateNewManifest
         Causes the Modal Popup to appear to enter the name of the new Manifest
     */
-    handleCreateNewManifest(){
+    handleNewManifestWindow(){
         this.showNewManifestModal = true;
     }
 
@@ -22,12 +22,21 @@ export default class PackageInstaller extends LightningElement {
         this.manifestId = event.detail;
     }
 
+    handleLoadManifestWindow(){
+        this.showLoadManifestModal = true;
+    }
+
+    handleLoadManifest(){
+        this.handleCloseModals();
+    }
+
     /*
         handleCloseModals
         Sets all modal pop ups to close
     */
     handleCloseModals(){
         this.showNewManifestModal = false;
+        this.showLoadManifestModal = false;
     }
 
     handleSave(){
@@ -35,6 +44,6 @@ export default class PackageInstaller extends LightningElement {
     }
 
     handleBack(){
-
+        this.manifestId = '';
     }
 }

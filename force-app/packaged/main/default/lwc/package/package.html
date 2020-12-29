@@ -1,17 +1,11 @@
 <template>
     <template if:true={packageDetails}>
-        <div class="slds-grid slds-grid_vertical package">
-            <div class="slds-col">
-              <span>
-                Package:
+        <div class={packageStyling}>
+            <div class="slds-col slds-size_1-of-1" style="font-weight:bold">
                 {packageDetails.package}
-              </span>
             </div>
-            <div class="slds-col">
-              <span>
-                Package Version:
+            <div class="slds-col slds-size_1-of-1">
                 {packageDetails.version}
-              </span>
             </div>
         </div>
     </template>

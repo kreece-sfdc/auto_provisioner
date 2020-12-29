@@ -3,10 +3,9 @@ import { getRecord } from 'lightning/uiRecordApi';
 
 const PACKAGE_FIELDS = 'aprv__Manifest_Package__c.aprv__Package_Version__r.sfLma__Package__r.Name';
 
-//const FIELDS = ['sfLma__Package_Version__c.Name', 'sfLma__Package_Version__c.aprv__Package_Version_Password__c', 'sfLma__Package_Version__c.sfLma__Version_ID__c'];
-
 export default class Package extends LightningElement {
     @api manifestPackageId;
+    @api isDuplicate;
     @track packageDetails;
 
     @wire(getRecord, { recordId: '$manifestPackageId', fields: PACKAGE_FIELDS})
@@ -19,7 +18,7 @@ export default class Package extends LightningElement {
         }
     }
 
-    connectedCallback(){
-
+    get packageStyling(){
+        return this.isDuplicate ? 'package-duplicate': 'package';
     }
 }

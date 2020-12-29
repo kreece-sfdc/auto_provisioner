@@ -1,13 +1,19 @@
 import { LightningElement, track, wire, api } from 'lwc';
-import createManifestPackage from '@salesforce/apex/ManifestCanvasUtils.createManifestPackage';
+import createManifestPackages from '@salesforce/apex/ManifestCanvasUtils.createManifestPackages';
+import deleteManifestPackages from '@salesforce/apex/ManifestCanvasUtils.deleteManifestPackages';
+
 
 //const FIELDS = ['aprv__Manifest_Package__c.aprv__Package_Version__c', 'aprv__Manifest_Package__c.aprv__Manifest__c' , 'aprv__Manifest_Package__c.Name'];
 
 export default class ManifestCanvas extends LightningElement {
     @api manifestId;
     @track columns = {};
-    showSelectPackageVersionsModal = false;
     @track allPackages = [];
+    @track duplicatePackages = false;
+    showSelectPackageVersionsModal = false;
+
+    unhighlightedColumn = 'background: white';
+    highlightedColumn = 'background: linear-gradient(#d4d6d8, #ffffff);'; //#c3faec
 
     connectedCallback(){
         console.log(this.manifestId);
@@ -42,7 +48,6 @@ export default class ManifestCanvas extends LightningElement {
         the dataTransfer 
     */
     handleOndragstart(event) {
-        event.target.style.opacity = 0.5;
         const dataTransfer = JSON.stringify({id: event.target.dataset.id, column: event.target.dataset.column});
         event.dataTransfer.setData("text/plain", dataTransfer);
     }
@@ -53,6 +58,7 @@ export default class ManifestCanvas extends LightningElement {
         will return to their previous position ondrop
     */
     handleOndragover(event) {
+        this.columns[this.getColumnIndexById(event.target.dataset.column)].style = this.highlightedColumn;
         event.preventDefault();
     }
 
@@ -62,7 +68,7 @@ export default class ManifestCanvas extends LightningElement {
         when we drag over it
     */
     handleOndragenter(event) {
-        event.target.style.opacity = 0.5
+        console.log('handleOndragenter');
     }
 
     /*
@@ -71,42 +77,48 @@ export default class ManifestCanvas extends LightningElement {
         we exit the dragover
     */
     handleOndragleave(event) {
-        event.target.style.opacity = 1.0
+        this.columns[this.getColumnIndexById(event.target.dataset.column)].style = this.unhighlightedColumn;
     }
 
     /*
         handleCreateNewManifestPackage
-        Takes a list of Package Version IDs and calls to Apex
-        method which creates Manifest packages from those IDs 
-        related to this Manifest and with an ordinal of 1
+        Takes a list of Package Version IDs 
+        Identifies which packages should be added to the canvas
+        Identifies which packages should be removed from the canvas
+        Makes changes to columns object to remove manifest packages from canvas
+        Calls to Apex to create new manifest packages for each package version
+        Resets the allPackages property to reflect latest changes
     */
     handleCreateNewManifestPackage(event){
         var newPackages = event.detail.filter(x => this.allPackages.indexOf(x) === -1 );
         var removedPackages = this.allPackages.filter(x => event.detail.indexOf(x) === -1);
-        console.log('newPackages');
-        console.log(newPackages);
-        console.log('removedPackages');
-        console.log(removedPackages);
 
         removedPackages.forEach(pkg => {
             this.columns.forEach(col => {
-                var index = this.getItemIndexByValue(pkg, col.items)
-                console.log(index);
+                var index = this.getItemIndexByValue(pkg, col.items, 'version')
                 if(index > -1){
                     col.items.splice(index, 1);
                 }
             });
         });
 
+        deleteManifestPackages({manifestId: this.manifestId, packageVersionIds: removedPackages})
+            .then((result) => {
+                console.log(result);
+            })
+            .catch((error) => {
+                console.log(error);
+            })
 
-        createManifestPackage({ manifestId: this.manifestId, packageVersionIds: newPackages })
+        createManifestPackages({ manifestId: this.manifestId, packageVersionIds: newPackages })
             .then((result) => {
                 this.addItems(result);
                 //this.addItems(newPackages);
             })
             .catch((error) => {
                 console.log(error);
-            });
+        });
+
         this.allPackages = event.detail;
     }
 
@@ -116,26 +128,76 @@ export default class ManifestCanvas extends LightningElement {
     */
     addColumn(){
         var columnId = this.columns.length + 1;
-        this.columns.push({id: columnId, items: []});
+        this.columns.push({id: columnId, style: this.unhighlightedColumn, items: []});
     }
 
     /*
         addItem
-        Takes the ID of a manifest package and adds to
-        first row of the column object.
+        Takes a list of a manifest packages and adds them
+        to the first column of the column object.
     */
     addItems(manifestPackages){
+        this.resetDuplicatePackages();
         manifestPackages.forEach(element => {
-            this.columns[0].items.push({id: element})
+            this.columns[0].items.push({id: element.Id, 
+                                        version: element.aprv__Package_Version__c, 
+                                        packageId: element.aprv__Package_Id__c,
+                                        ordinal: element.aprv__Ordinal__c,
+                                        columnIndex: 0,
+                                        duplicate: false})
         });
+        this.markDuplicatePackages();
         this.handleCloseModals();
+    }
 
-        
-        /*this.columns[0].items.push({id: this.currentPackageDefRecordId, 
-                                    name: packageDefinition.fields.MHolt__Namespace__c.value,
-                                    version: packageDefinition.fields.MHolt__Package_Version__c.value,
-                                    password: packageDefinition.fields.MHolt__Password__c.value,
-                                    col: 0});*/
+
+    /*
+        getFlattenedColumns
+        Gets all of the package information across all columns
+        from the items property and returns all items as one 
+        big array of items (package information)
+    */
+    getFlattenedColumns(){
+        var flattenedColumns = [];
+        var itemsArray = this.columns.map(col => col.items);
+        itemsArray.forEach(column => {
+            flattenedColumns = flattenedColumns.concat(column);
+        });
+        return flattenedColumns;
+    }
+
+    /*
+        resetDuplicatePackages
+        Sets the duplicate property of all manifest package items to false
+    */
+    resetDuplicatePackages(){
+        this.getFlattenedColumns().forEach(flatPackage => {
+            this.columns[flatPackage.columnIndex].items[this.getItemIndexByValue(flatPackage.id, this.columns[flatPackage.columnIndex].items, 'id')].duplicate = false;
+        })
+        this.duplicatePackages = false;
+    }
+
+    /*
+        markDuplicatePackages
+        Loops through every manifest package item in the columns array
+        Determines whether there are any other manifest package items on the canvas
+        which look up to the same package. If there are, marks the duplicate property
+        for that item as true
+    */
+    markDuplicatePackages(){
+        var flattenedColumns = this.getFlattenedColumns();
+        flattenedColumns.forEach(packageToFind => {
+            var dupeFilter = {packageId: packageToFind.packageId, id: packageToFind.id, column: packageToFind.columnIndex};
+            flattenedColumns.filter(packageToCompare => {
+                if(packageToCompare.id != dupeFilter.id){
+                    if(packageToCompare.packageId == dupeFilter.packageId){
+                        this.columns[packageToCompare.columnIndex].items[this.getItemIndexByValue(packageToCompare.id, this.columns[packageToCompare.columnIndex].items, 'id')].duplicate = true;
+                        this.columns[dupeFilter.column].items[this.getItemIndexByValue(dupeFilter.id, this.columns[dupeFilter.column].items, 'id')].duplicate = true;
+                        this.duplicatePackages = true;
+                    }
+                }
+            });
+        });
     }
 
     /*
@@ -150,14 +212,14 @@ export default class ManifestCanvas extends LightningElement {
 
     /*
         getItemIndexByValue
-        Takes an Id and an array, finds the index of the item in
-        the given array and returns the index
+        Takes an Id, an array and a property and 
+        finds the index of the item in the given array 
+        based on matching the property value for this element
+        and the value of id. 
+        Returns the index of the matching item in the array
     */
-    getItemIndexByValue(id, obj){
-        console.log('getitemindexbyval');
-        console.log(id);
-        console.log(obj);
-        var idFilter = (element) => element.id == id;
+    getItemIndexByValue(id, obj, property){
+        var idFilter = (element) => element[property] == id;
         return obj.findIndex(idFilter);
     }
 
@@ -170,8 +232,8 @@ export default class ManifestCanvas extends LightningElement {
         was dropped
     */
     handleOndrop(event) {
-        event.currentTarget.style.opacity = 1.0;
-        event.target.style.opacity = 1.0;
+        this.columns[this.getColumnIndexById(event.target.dataset.column)].style = this.unhighlightedColumn;
+
 
         const dataTransfer = JSON.parse(event.dataTransfer.getData('text/plain'));
         const {id: startId, column: startColumn} = dataTransfer;
@@ -180,18 +242,18 @@ export default class ManifestCanvas extends LightningElement {
         var startColIndex = this.getColumnIndexById(startColumn);
         var endColIndex = this.getColumnIndexById(endColumn);
 
-        var targetItemIndexInColumn = this.getItemIndexByValue(endId, this.columns[endColIndex].items);
-        var itemIndexInColumn = this.getItemIndexByValue(startId, this.columns[startColIndex].items)
+        var targetItemIndexInColumn = this.getItemIndexByValue(endId, this.columns[endColIndex].items, 'id');
+        var itemIndexInColumn = this.getItemIndexByValue(startId, this.columns[startColIndex].items, 'id');
         var itemObject = this.columns[startColIndex].items[itemIndexInColumn];
-        
+
         //Functionally, this doesn't matter, but from a UI perspective it looks nicer if dropping an item into empty column 
         //space goes at the end of the column, rather than being shoved into the top
         if(targetItemIndexInColumn < 0){
             targetItemIndexInColumn = this.columns[endColIndex].items.length;
         }
-
         //Add the item to the new column
         this.columns[endColIndex].items.splice(targetItemIndexInColumn +1, 0, itemObject);
+        itemObject.columnIndex = endColIndex;
         //Remove the item from the previous column 
         if(startColIndex == endColIndex && targetItemIndexInColumn < itemIndexInColumn){
             //If we're in the same same column and the target item is beneath the item to be dropped we will have already spliced the 

@@ -13,12 +13,15 @@
         <div>
             <template if:false={manifestId}>
                 <div class="slds-p-bottom_medium">
-                    <lightning-button variant="brand" label="New Install Manifest" title="New Install Manifest" onclick={handleCreateNewManifest} class="slds-m-left_x-small"></lightning-button>
-                    <lightning-button variant="brand" label="Load Install Manifest" title="Load Install Manifest" onclick={handleLoadManifest} class="slds-m-left_x-small"></lightning-button>
+                    <lightning-button variant="brand" label="New Manifest" title="Create a new installation manifest sequence" onclick={handleNewManifestWindow} class="slds-m-left_x-small"></lightning-button>
+                    <lightning-button variant="brand" label="Load Manifest" title="Load an existing installation manifest sequence" onclick={handleLoadManifestWindow} class="slds-m-left_x-small"></lightning-button>
                 </div>
             </template>
             <template if:true={showNewManifestModal}>
                 <c-record-create object-api-name="aprv__Manifest__c" object-name="Manifest" onsuccess={handleNewManifest} oncancel={handleCloseModals}></c-record-create>
+            </template>
+            <template if:true={showLoadManifestModal}>
+                <c-manifest-loader onload={handleLoadManifest} oncancel={handleCloseModals}></c-manifest-loader>
             </template>
             <template if:true={manifestId}>
                 <c-manifest-canvas manifest-id={manifestId}></c-manifest-canvas>

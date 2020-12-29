@@ -10,7 +10,7 @@ export default class PackageSelector extends LightningElement {
         if(data){
             this.allPackageVersions = [];
             data.forEach(element => {
-                this.allPackageVersions.push({label: element.Name, value: element.Id});                    
+                this.allPackageVersions.push({label: element.sfLma__Package__r.Name + ': ' + element.Name, value: element.Id});                    
             });
         }
         else if(error){
