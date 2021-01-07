@@ -9,7 +9,7 @@ public with sharing class CustomPicklist
     {
         if(val == null)
         {
-            val = label;
+            val = lab;
         }
         
         this.label = lab;

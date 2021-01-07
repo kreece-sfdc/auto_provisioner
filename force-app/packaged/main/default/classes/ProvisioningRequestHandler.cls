@@ -71,7 +71,7 @@ public with sharing class ProvisioningRequestHandler
         system.debug(provisioningRequest);
         string client_id = AuthHelper.CLIENTID;
         string client_secret = AuthHelper.CLIENTSECRET;
-        string callback_url = AuthHelper.REDIRECTURLPRODUCTION;
+        string callback_url = AuthHelper.fetchRedirectUri(false);
 
 
         Map<string, object> dataMap = new Map<string, object>();
@@ -293,6 +293,22 @@ public with sharing class ProvisioningRequestHandler
     }
 
     @AuraEnabled
+    public static string loginToOrg(string record_id)
+    {
+        List<Subscriber_Authentication__c> authRecords = [SELECT Access__c, Instance__c, Refresh__c, Org_Id__c, User__c, IsSandbox__c FROM Subscriber_Authentication__c WHERE Id =: record_id];
+
+        if(!authRecords.isEmpty())
+        {
+            Subscriber_Authentication__c authRecord = authRecords[0];
+            string url = authRecord.Instance__c + '/secur/frontdoor.jsp?sid=' + authRecord.Access__c;
+
+            return url; 
+        }
+
+        return '';
+    }
+
+    @AuraEnabled
     public static ComponentResponse fetchUserInfo(string record_id)
     {
         ComponentResponse componentResponse = new ComponentResponse();
@@ -322,7 +338,7 @@ public with sharing class ProvisioningRequestHandler
         return componentResponse;
     }
 
-    public static Provisioning_Request__c GetNextProvisioningRequestToSignup()
+    /*public static Provisioning_Request__c GetNextProvisioningRequestToSignup()
     {
         List<Provisioning_Request__c> inProgressProvisioningRequests = [SELECT SignupRequest_Id__c, Status__c FROM Provisioning_Request__c WHERE Status__c = 'In Progress'];
 
@@ -494,7 +510,7 @@ public with sharing class ProvisioningRequestHandler
         }
 
         return resp;
-    }
+    }*/
 
     public static boolean isPBO()
     {
