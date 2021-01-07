@@ -2,13 +2,37 @@
 public with sharing class AuthHelperTest 
 {
     @isTest
-    static void FetchTokensTest()
+    public static void FetchTokensTest()
     {
         Test.setMock(HttpCalloutMock.class, new AuthCalloutMock());
 
         boolean resp = AuthHelper.fetchTokens('code', false);
 
         system.assertEquals(true, resp);
+    }
+
+    @isTest
+    static void RefreshAccessTokensTest()
+    {
+        Test.setMock(HttpCalloutMock.class, new AuthCalloutMock());
+
+        boolean resp = AuthHelper.fetchTokens('code', false);
+
+        test.startTest();
+
+        List<Subscriber_Authentication__c> auths = [SELECT Access__c, Refresh__c, IsSandbox__c, Org_Id__c, User__c, Instance__c FROM Subscriber_Authentication__c];
+        Subscriber_Authentication__c newAuth;
+
+        if(!auths.isEmpty())
+        {
+            newAuth = AuthHelper.refreshAccessToken(auths.get(0), true);
+
+            newAuth = AuthHelper.refreshAccessToken(auths.get(0), false);
+        }   
+
+        test.stopTest();
+
+        system.assertNotEquals(null, newAuth);
     }
 
     @isTest
@@ -42,6 +66,14 @@ public with sharing class AuthHelperTest
         system.assertNotEquals(null, resp);
     }
 
+    @isTest
+    static void GenerateOrgAuthInitialiserSandboxTest()
+    {
+        string resp = AuthHelper.GenerateOrgAuthInitialiserSandbox();
+
+        system.assertNotEquals(null, resp);
+    }
+
 
     @isTest
     static void AuthControllerTest()
@@ -56,6 +88,23 @@ public with sharing class AuthHelperTest
         
         pageRef.getParameters().put('code', 'abc');
         controller.Redirect();
+        
+        system.assertEquals(true, controller.CloseModal);
+    }
+
+    @isTest
+    static void AuthControllerSandboxTest()
+    {
+        Test.setMock(HttpCalloutMock.class, new AuthCalloutMock());
+        
+        PageReference pageRef = Page.authHandlerSandbox;
+        Test.setCurrentPage(pageRef);
+        
+        AuthPageHandler controller = new AuthPageHandler();
+        controller.RedirectSandbox();
+        
+        pageRef.getParameters().put('code', 'abc');
+        controller.RedirectSandbox();
         
         system.assertEquals(true, controller.CloseModal);
     }

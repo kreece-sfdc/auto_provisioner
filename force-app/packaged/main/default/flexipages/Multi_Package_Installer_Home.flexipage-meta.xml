@@ -34,9 +34,6 @@
         <componentInstances>
             <componentName>pickListTester</componentName>
         </componentInstances>
-        <componentInstances>
-            <componentName>authSettings</componentName>
-        </componentInstances>
         <name>sidebar</name>
         <type>Region</type>
     </flexiPageRegions>

@@ -371,6 +371,10 @@
         <apexPage>authHandler</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
+    <pageAccesses>
+        <apexPage>authHandlerSandbox</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
     <tabSettings>
         <tab>Manifest__c</tab>
         <visibility>Visible</visibility>
