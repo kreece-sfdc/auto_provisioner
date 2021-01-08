@@ -6,10 +6,10 @@ public with sharing class ProvisioningRequestHandler
         ProvisioningRequest request = requests[0];
         // need to bulkify
 
-        CreateProvisioningRequest(request.manifestId, request.company, request.country, request.firstname, request.lastname, request.notes, request.edition, request.language, request.email, request.subdomain, request.trialdays, request.username);
+        CreateProvisioningRequest(request.manifestId, request.company, request.country, request.firstname, request.lastname, request.notes, request.edition, request.language, request.email, request.subdomain, request.trialdays, request.username, request.OrgId);
     }
 
-    public static void CreateProvisioningRequest(string manifestId, string company, string country, string firstname, string lastname, string notes, string edition, string language, string email, string subdomain, integer trialdays, string username)
+    public static void CreateProvisioningRequest(string manifestId, string company, string country, string firstname, string lastname, string notes, string edition, string language, string email, string subdomain, integer trialdays, string username, string orgid)
     {
         Provisioning_Request__c provisioningRequest = new Provisioning_Request__c
         (
@@ -23,10 +23,9 @@ public with sharing class ProvisioningRequestHandler
             SignupEmail__c = email,
             Subdomain__c = subdomain,
             TrialDays__c = trialdays,
-            Username__c = username
+            Username__c = username,
+            Org_Id__c = orgid
         );
-
-        system.debug(provisioningRequest);
 
         if(string.isNotEmpty(manifestId))
         {
@@ -300,9 +299,13 @@ public with sharing class ProvisioningRequestHandler
         if(!authRecords.isEmpty())
         {
             Subscriber_Authentication__c authRecord = authRecords[0];
-            string url = authRecord.Instance__c + '/secur/frontdoor.jsp?sid=' + authRecord.Access__c;
 
-            return url; 
+            if(authRecord.Instance__c != null && authRecord.Access__c != null)
+            {
+                string url = authRecord.Instance__c + '/secur/frontdoor.jsp?sid=' + authRecord.Access__c;
+
+                return url; 
+            }
         }
 
         return '';
