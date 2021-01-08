@@ -102,6 +102,7 @@ public with sharing class AuthHelper
         {
             database.upsert(auth, Subscriber_Authentication__c.Org_Id__c);
 
+            // this is where we need remote site settings to be created; naming convention is 'XX_Customer'
             return true;
         }
 
