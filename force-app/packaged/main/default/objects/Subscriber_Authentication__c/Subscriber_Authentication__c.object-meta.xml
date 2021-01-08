@@ -158,8 +158,9 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Subscriber Authentication</label>
     <nameField>
+        <displayFormat>SA-{00000000}</displayFormat>
         <label>Name</label>
-        <type>Text</type>
+        <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Subscribers Authentication</pluralLabel>
     <searchLayouts/>

@@ -1,15 +1,27 @@
 public with sharing class AuthHelper 
 {
-    public static string CLIENTID  = '3MVG9rKhT8ocoxGmgQNkeOQVuBMpg.YFRK9MKHu0aUCScdWVeavPgdUVUt9oNHeJZvs5Cu03Ji3Dju1_c94Ms';
+    public static string CLIENTID  = GetAuthSettings().Client_Id__c;
+    public static string CLIENTSECRET = GetAuthSettings().Client_Secret__c;
 
-    public static string CLIENTSECRET = '05758E3BC3DE715707306A777D99FACFA9A9598CF253AD8032FA7328C6146EB1';
-    public static string REDIRECTURIBASE = 'https://computing-ability-7971-dev-ed.cs80.my.salesforce.com';//URL.getSalesforceBaseUrl().toExternalForm();
+    public static string REDIRECTURLPRODUCTIONTOPRODUCTION = 'https://login.salesforce.com/apex/aprv__authHandler';
+    public static string REDIRECTURLPRODUCTIONTOSANDBOX = 'https://login.salesforce.com/apex/aprv__authHandlerSandbox';
 
-    public static string REDIRECTURLPRODUCTION = REDIRECTURIBASE + '/apex/authHandler';
-    public static string REDIRECTURLSANDBOX = REDIRECTURIBASE + '/apex/authHandlerSandbox';
-    
+    public static string REDIRECTURLSANDBOXTOPRODUCTION = 'https://test.salesforce.com/apex/aprv__authHandler';
+    public static string REDIRECTURLSANDBOXTOSANDBOX = 'https://test.salesforce.com/apex/aprv__authHandlerSandbox';
+   
+    public static aprv__Connected_App_Setting__mdt GetAuthSettings()
+    {
+        List<aprv__Connected_App_Setting__mdt> connectedAppSettings = [SELECT Id, MasterLabel, Client_Id__c, Client_Secret__c FROM aprv__Connected_App_Setting__mdt WHERE MasterLabel = 'Default'];
 
-    static boolean fetchTokens(string code, boolean isSandbox, string client_id, string client_secret, string redirect_uri)
+        if(!connectedAppSettings.isEmpty())
+        {
+            return connectedAppSettings.get(0);
+        }
+
+        return new aprv__Connected_App_Setting__mdt();
+    }
+
+    public static boolean fetchTokens(string code, boolean isSandbox, string client_id, string client_secret, string redirect_uri)
     {
         string tokenEndpoint;
         string authHeader;
@@ -96,14 +108,52 @@ public with sharing class AuthHelper
         return false;
     }
 
-    public static boolean fetchTokens(string code, boolean isSandbox)
+    static boolean isThisOrgaSandbox()
     {
-        if(isSandbox == true)
+        List<Organization> orgs = [SELECT IsSandbox FROM Organization];
+
+        if(!orgs.isEmpty())
         {
-            return fetchTokens(code, true, CLIENTID, CLIENTSECRET, REDIRECTURLSANDBOX); 
+            return orgs.get(0).IsSandbox;
         }
 
-        return fetchTokens(code, false, CLIENTID, CLIENTSECRET, REDIRECTURLPRODUCTION);
+        return null;
+    }
+
+    public static string fetchRedirectUri(boolean isCustomerSandbox)
+    {
+        boolean isThisOrgaSandbox = isThisOrgaSandbox();
+
+        if(isThisOrgaSandbox == true && isCustomerSandbox == true)
+        {
+            return REDIRECTURLSANDBOXTOSANDBOX; 
+        }
+        else if(isThisOrgaSandbox == true && isCustomerSandbox == false)
+        {
+            return REDIRECTURLSANDBOXTOPRODUCTION; 
+        }
+        else if(isThisOrgaSandbox == false && isCustomerSandbox == true)
+        {
+            return REDIRECTURLPRODUCTIONTOSANDBOX; 
+        }
+        else if(isThisOrgaSandbox == false && isCustomerSandbox == false)
+        {
+            return REDIRECTURLPRODUCTIONTOPRODUCTION; 
+        }
+
+        return null;
+    }
+
+    public static boolean fetchTokens(string code, boolean isCustomerSandbox)
+    {
+        string redirect_uri = fetchRedirectUri(isCustomerSandbox);
+
+        if(redirect_uri != null)
+        {
+            return fetchTokens(code, isCustomerSandbox, CLIENTID, CLIENTSECRET, redirect_uri); 
+        }
+        
+        return null;
     }
 
     /*public static boolean fetchTokensSandbox(string code)
@@ -111,20 +161,18 @@ public with sharing class AuthHelper
         return fetchTokens(code, true, CLIENTID, CLIENTSECRET, REDIRECTURLSANDBOX);
     }*/
 
-    static Subscriber_Authentication__c refreshAccessToken(Subscriber_Authentication__c auth, boolean silently, boolean isSandbox)
+    static Subscriber_Authentication__c refreshAccessToken(Subscriber_Authentication__c auth, boolean silently, boolean isCustomerSandbox)
     {
         string tokenEndpoint;
-        string redirect_uri;
+        string redirect_uri = fetchRedirectUri(isCustomerSandbox);
 
-        if(isSandbox == true) 
+        if(isCustomerSandbox == true) 
         {
             tokenEndpoint = 'https://test.salesforce.com/services/oauth2/token?';
-            redirect_uri = REDIRECTURLSANDBOX;
         }
         else 
         {
             tokenEndpoint = 'https://login.salesforce.com/services/oauth2/token?';
-            redirect_uri = REDIRECTURLPRODUCTION;
         }
 
 
@@ -182,23 +230,34 @@ public with sharing class AuthHelper
     @AuraEnabled
     public static string GenerateOrgAuthInitialiser()
     {
-        List<string> parts = new List<string>{ 'https://login.salesforce.com/services/oauth2/authorize?response_type=code' };
-        parts.add('client_id=' + CLIENTID);
-        parts.add('client_secret=' + CLIENTSECRET);
-        parts.add('redirect_uri=' + REDIRECTURLPRODUCTION);
-        parts.add('scope=refresh_token+full');
-        
-		return string.join(parts, '&');
+        return GenerateOrgAuthInitialiser(false);
     }
 
     @AuraEnabled
     public static string GenerateOrgAuthInitialiserSandbox()
     {
-        List<string> parts = new List<string>{ 'https://test.salesforce.com/services/oauth2/authorize?response_type=code' };
+        return GenerateOrgAuthInitialiser(true);
+    }
+
+    public static string GenerateOrgAuthInitialiser(boolean isSandbox)
+    {
+        string redirect_uri = fetchRedirectUri(isSandbox);
+
+        string url = 'https://login.salesforce.com';
+
+        if(isSandbox == true)
+        {
+            url = 'https://test.salesforce.com';
+        }
+
+        List<string> parts = new List<string>{ url + '/services/oauth2/authorize?response_type=code' };
         parts.add('client_id=' + CLIENTID);
         parts.add('client_secret=' + CLIENTSECRET);
-        parts.add('redirect_uri=' + REDIRECTURLSANDBOX);
+        parts.add('redirect_uri=' + redirect_uri);
         parts.add('scope=refresh_token+full');
+
+        parts.add('display=popup');
+        parts.add('prompt=select_account');
         
 		return string.join(parts, '&');
     }

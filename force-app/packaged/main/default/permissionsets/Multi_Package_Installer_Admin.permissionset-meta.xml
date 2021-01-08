@@ -5,6 +5,10 @@
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
+        <apexClass>ApiResponse</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>AuthCalloutMock</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -21,6 +25,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>ComponentResponse</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>CustomPicklist</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -30,6 +38,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>LicenceTriggerHelperTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>MapHelper</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -49,6 +61,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>SignupInProgressException</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>ToolingApiHelper</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -60,6 +76,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Manifest_Package__c.Package_Version__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Manifest_Package__c.Package__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -348,6 +369,10 @@
     </objectPermissions>
     <pageAccesses>
         <apexPage>authHandler</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
+        <apexPage>authHandlerSandbox</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <tabSettings>
