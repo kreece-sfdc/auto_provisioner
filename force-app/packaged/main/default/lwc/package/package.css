@@ -5,6 +5,7 @@
     border-radius: 7px;
     padding: 10px;
     margin: 3px 0px;
+    max-width: 10em;
 }
 
 .package-duplicate {
@@ -14,4 +15,5 @@
     border-radius: 7px;
     padding: 10px;
     margin: 3px 0px;
+    max-width: 10em;
 }

@@ -8,6 +8,8 @@ export default class Package extends LightningElement {
     @api isDuplicate;
     @track packageDetails;
 
+
+    //TODO Add a little bin icon to packages so they can be removed off the screen
     @wire(getRecord, { recordId: '$manifestPackageId', fields: PACKAGE_FIELDS})
     wirePackageVersionId({error, data}){
         if(data){

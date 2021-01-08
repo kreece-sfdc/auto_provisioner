@@ -8,6 +8,12 @@
                 <div class="slds-card__header-title slds-card__header-link slds-truncate" title={marginTitle}>
                     <span>Multi-Package Installer</span>
                 </div>
+                <!--<lightning-button-icon class="slds-button_icon-border-filled slds-button" 
+                                        icon-name="utility:edit" 
+                                        onclick={handleCloseModals}  
+                                        alternative-text="Edit Manifest" 
+                                        title="Edit Manifest">
+                </lightning-button-icon>-->
             </header>
         </div>
         <div>
@@ -18,22 +24,14 @@
                 </div>
             </template>
             <template if:true={showNewManifestModal}>
-                <c-record-create object-api-name="aprv__Manifest__c" object-name="Manifest" onsuccess={handleNewManifest} oncancel={handleCloseModals}></c-record-create>
+                <c-record-create cols="1" object-api-name="aprv__Manifest__c" object-name="Manifest" onsuccess={handleNewManifest} oncancel={handleCloseModals}></c-record-create>
             </template>
             <template if:true={showLoadManifestModal}>
                 <c-manifest-loader onload={handleLoadManifest} oncancel={handleCloseModals}></c-manifest-loader>
             </template>
             <template if:true={manifestId}>
-                <c-manifest-canvas manifest-id={manifestId}></c-manifest-canvas>
+                <c-manifest-canvas manifest-id={manifestId} onback={handleBack}></c-manifest-canvas>
             </template>
         </div>
-        <template if:true={manifestId}>
-            <div>
-                <footer class="slds-card__footer">
-                    <lightning-button variant="brand" label="Save" title="Save" onclick={handleSave} class="slds-m-left_x-small"></lightning-button>
-                    <lightning-button variant="brand" label="Back" title="Back" onclick={handleBack} class="slds-m-left_x-small"></lightning-button>
-                </footer>
-            </div>
-        </template>
     </article>
 </template>

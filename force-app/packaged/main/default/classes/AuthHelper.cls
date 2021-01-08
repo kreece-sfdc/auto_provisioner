@@ -1,8 +1,9 @@
 public with sharing class AuthHelper 
 {
-    public static string CLIENTID  = '3MVG9od6vNol.eBiHujuKURMTk0yi1iShepB1TVy_JU9A3ufTpsl63_pDDk2BKzHAF5ETYAUh3LHO3UX3XmCP';
-    public static string CLIENTSECRET = 'FEEC700CDE23798D8C1D3B911807772E4BBF3CD7D57F3F83660B30D1BDB82E99';
-    public static string REDIRECTURIBASE = URL.getSalesforceBaseUrl().toExternalForm();
+    public static string CLIENTID  = '3MVG9rKhT8ocoxGmgQNkeOQVuBMpg.YFRK9MKHu0aUCScdWVeavPgdUVUt9oNHeJZvs5Cu03Ji3Dju1_c94Ms';
+
+    public static string CLIENTSECRET = '05758E3BC3DE715707306A777D99FACFA9A9598CF253AD8032FA7328C6146EB1';
+    public static string REDIRECTURIBASE = 'https://computing-ability-7971-dev-ed.cs80.my.salesforce.com';//URL.getSalesforceBaseUrl().toExternalForm();
 
     public static string REDIRECTURLPRODUCTION = REDIRECTURIBASE + '/apex/authHandler';
     public static string REDIRECTURLSANDBOX = REDIRECTURIBASE + '/apex/authHandlerSandbox';

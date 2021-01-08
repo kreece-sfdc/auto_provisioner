@@ -26,7 +26,8 @@ export default class PackageInstaller extends LightningElement {
         this.showLoadManifestModal = true;
     }
 
-    handleLoadManifest(){
+    handleLoadManifest(event){
+        this.manifestId = event.detail.manifestId;
         this.handleCloseModals();
     }
 
@@ -37,10 +38,6 @@ export default class PackageInstaller extends LightningElement {
     handleCloseModals(){
         this.showNewManifestModal = false;
         this.showLoadManifestModal = false;
-    }
-
-    handleSave(){
-
     }
 
     handleBack(){
