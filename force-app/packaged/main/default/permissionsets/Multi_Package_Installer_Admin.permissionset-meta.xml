@@ -70,7 +70,17 @@
     </classAccesses>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Manifest_Package__c.Column_Number__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Manifest_Package__c.Ordinal__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Manifest_Package__c.Package_Id__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

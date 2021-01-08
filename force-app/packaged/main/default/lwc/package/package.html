@@ -1,0 +1,12 @@
+<template>
+    <template if:true={packageDetails}>
+        <div class={packageStyling}>
+            <div class="slds-col slds-size_1-of-1" style="font-weight:bold">
+                {packageDetails.package}
+            </div>
+            <div class="slds-col slds-size_1-of-1">
+                {packageDetails.version}
+            </div>
+        </div>
+    </template>
+</template>

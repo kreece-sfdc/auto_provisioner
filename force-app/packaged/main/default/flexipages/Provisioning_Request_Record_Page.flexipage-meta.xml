@@ -105,6 +105,12 @@
                 <name>recordId</name>
             </componentInstanceProperties>
             <componentName>pushToSignup</componentName>
+            <visibilityRule>
+                <criteria>
+                    <leftValue>{!Record.Org_Id__c}</leftValue>
+                    <operator>EQUAL</operator>
+                </criteria>
+            </visibilityRule>
         </componentInstances>
         <mode>Replace</mode>
         <name>sidebar</name>
