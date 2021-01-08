@@ -62,6 +62,14 @@ public with sharing class ManifestCanvasUtils {
                     existingPackagesByVersionId.put(mp.aprv__Package_Version__c, mp);
                 }
 
+                List<sfLma__Package_Version__c> packageVersions = [SELECT sfLma__Package__c FROM sfLma__Package_Version__c WHERE Id IN: packageVersionIds];
+                Map<Id, Id> packageMap = new Map<Id, Id>();
+                for(sfLma__Package_Version__c version: packageVersions)
+                {
+                    packageMap.put(version.Id, version.sfLma__Package__c);
+                }
+
+
                 //Only create a new manifest package if we haven't already associated this package version with the manifest, otherwise use the existing manifest package
                 //2 manifest packages within the same manifest cannot share the same ordinal, so we need to increase this with each package version we add.
                 Integer numNewManifestPackages = 0;
@@ -71,7 +79,7 @@ public with sharing class ManifestCanvasUtils {
                         if(existingPackagesByVersionId.get(pvi) != null){
                             manifestPackages.add(existingPackagesByVersionId.get(pvi));
                         }else{
-                            aprv__Manifest_Package__c mp = new aprv__Manifest_Package__c(aprv__Manifest__c = manifestId, aprv__Package_Version__c=pvi, aprv__Column_Number__c =0, aprv__Ordinal__c=numNewManifestPackages);
+                            aprv__Manifest_Package__c mp = new aprv__Manifest_Package__c(aprv__Manifest__c = manifestId, aprv__Package_Version__c=pvi, aprv__Package__c = packageMap.get(pvi), aprv__Column_Number__c =0, aprv__Ordinal__c=numNewManifestPackages);
                             manifestPackages.add(mp);
                             numNewManifestPackages++;
                         }
