@@ -3,10 +3,9 @@
     <contactEmail>kreece@salesforce.com</contactEmail>
     <label>AuthTestForceData</label>
     <oauthConfig>
-        <callbackUrl>https://force-data-61272-dev-ed.cs81.my.salesforce.com/apex/authHandler
-https://force-data-61272-dev-ed--aprv.visualforce.com/apex/authHandler
-https://force-data-61272-dev-ed--aprv.visualforce.com/apex/authHandlerSandbox</callbackUrl>
-        
+        <callbackUrl>https://computing-ability-7971-dev-ed.cs80.my.salesforce.com/apex/authHandler
+https://computing-ability-7971-dev-ed.cs80.my.salesforce.com/apex/authHandlerSandbox</callbackUrl>
+        <consumerKey>3MVG9rKhT8ocoxGmgQNkeOQVuBMpg.YFRK9MKHu0aUCScdWVeavPgdUVUt9oNHeJZvs5Cu03Ji3Dju1_c94Ms</consumerKey>
         <isAdminApproved>false</isAdminApproved>
         <scopes>Full</scopes>
         <scopes>RefreshToken</scopes>
