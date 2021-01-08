@@ -11,6 +11,7 @@ package.xml
 # LWC Jest
 **/__tests__/**
 **/profiles/**
+
 **/appMenus/**
 **/connectedApps/**
 

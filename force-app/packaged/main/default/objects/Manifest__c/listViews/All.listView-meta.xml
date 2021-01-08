@@ -4,6 +4,7 @@
     <columns>NAME</columns>
     <columns>Description__c</columns>
     <columns>Trialforce_Template__c</columns>
+    <columns>CREATED_DATE</columns>
     <filterScope>Everything</filterScope>
     <label>All</label>
 </ListView>
