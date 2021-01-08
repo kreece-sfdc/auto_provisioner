@@ -1,0 +1,19 @@
+.package {
+    background-color: #B0C4DF;
+    box-shadow: 5px 5px 3px #888888;
+    border: 1px solid;
+    border-radius: 7px;
+    padding: 10px;
+    margin: 3px 0px;
+    max-width: 10em;
+}
+
+.package-duplicate {
+    background-color: #b23e3e;
+    box-shadow: 5px 5px 3px #888888;
+    border: 1px solid;
+    border-radius: 7px;
+    padding: 10px;
+    margin: 3px 0px;
+    max-width: 10em;
+}
