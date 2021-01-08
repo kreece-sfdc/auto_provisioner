@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Company__c</fullName>
+    <fullName>Package_Id__c</fullName>
+    <description>The ID of the package to which the package version in this manifest package is related</description>
     <externalId>false</externalId>
-    <label>Company</label>
-    <length>80</length>
+    <formula>Package_Version__r.sfLma__Package__c</formula>
+    <label>Package Id</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>

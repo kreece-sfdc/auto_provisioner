@@ -3,8 +3,8 @@ import { getRecord, getFieldValue, getRecordNotifyChange } from 'lightning/uiRec
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 /*import SignupOrg from '@salesforce/apex/ProvisioningRequestHandler.SignupOrg';
-import CheckOrgSignup from '@salesforce/apex/ProvisioningRequestHandler.CheckOrgSignup';
-import REQUEST_PACKAGE_ID from '@salesforce/schema/Provisioning_Request_Package__c.Id';*/
+import CheckOrgSignup from '@salesforce/apex/ProvisioningRequestHandler.CheckOrgSignup';*/
+import REQUEST_PACKAGE_ID from '@salesforce/schema/Provisioning_Request_Package__c.Id';
 
 export default class PushToSignup extends LightningElement {
     @api recordId;
