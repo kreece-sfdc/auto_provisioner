@@ -24,4 +24,6 @@ public class ProvisioningRequest
     public integer TrialDays;
     @InvocableVariable
     public string Username;
+    @InvocableVariable
+    public string OrgId;
 }

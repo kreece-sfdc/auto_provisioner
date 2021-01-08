@@ -1,10 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
+        <name>Create_Existing_Org</name>
+        <label>Create Existing Org</label>
+        <locationX>50</locationX>
+        <locationY>518</locationY>
+        <actionName>ProvisioningRequestHandler</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Thank_you</targetReference>
+        </connector>
+        <inputParameters>
+            <name>ManifestId</name>
+            <value>
+                <elementReference>Existing_Template</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>OrgId</name>
+            <value>
+                <elementReference>Org_Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <actionCalls>
         <name>Create_Provisioning_Request</name>
         <label>Create Provisioning Request</label>
-        <locationX>697</locationX>
-        <locationY>696</locationY>
+        <locationX>314</locationX>
+        <locationY>638</locationY>
         <actionName>ProvisioningRequestHandler</actionName>
         <actionType>apex</actionType>
         <connector>
@@ -83,6 +106,59 @@
             </value>
         </inputParameters>
     </actionCalls>
+    <choices>
+        <name>No</name>
+        <choiceText>No</choiceText>
+        <dataType>Boolean</dataType>
+        <value>
+            <booleanValue>false</booleanValue>
+        </value>
+    </choices>
+    <choices>
+        <name>Yes</name>
+        <choiceText>Yes</choiceText>
+        <dataType>Boolean</dataType>
+        <value>
+            <booleanValue>true</booleanValue>
+        </value>
+    </choices>
+    <decisions>
+        <name>Existing_Org</name>
+        <label>Existing Org</label>
+        <locationX>314</locationX>
+        <locationY>278</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Existing_Yes</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Is_this_an_existing_org</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <elementReference>Yes</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Existing_Org_Provisioning_Request</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+        <rules>
+            <name>Existing_No</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Is_this_an_existing_org</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <elementReference>No</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>New_Provisioning_Request</targetReference>
+            </connector>
+            <label>No</label>
+        </rules>
+    </decisions>
     <dynamicChoiceSets>
         <name>ManifestList</name>
         <dataType>String</dataType>
@@ -107,7 +183,7 @@
     <processMetadataValues>
         <name>CanvasMode</name>
         <value>
-            <stringValue>FREE_FORM_CANVAS</stringValue>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
         </value>
     </processMetadataValues>
     <processMetadataValues>
@@ -118,10 +194,43 @@
     </processMetadataValues>
     <processType>Flow</processType>
     <screens>
+        <name>Existing_Org_Provisioning_Request</name>
+        <label>Existing Org Provisioning Request</label>
+        <locationX>50</locationX>
+        <locationY>398</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <connector>
+            <targetReference>Create_Existing_Org</targetReference>
+        </connector>
+        <fields>
+            <name>Existing_Template</name>
+            <choiceReferences>ManifestList</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Template</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Org_Id</name>
+            <dataType>String</dataType>
+            <fieldText>Org Id</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+            <validationRule>
+                <errorMessage>&lt;p&gt;Please enter a valid Org Id [00Dxxxxxxxxxxxx] (15 characters)&lt;/p&gt;</errorMessage>
+                <formulaExpression>REGEX({!Org_Id}, &quot;00D\\w{12}&quot;)</formulaExpression>
+            </validationRule>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
         <name>New_Provisioning_Request</name>
         <label>New Provisioning Request</label>
-        <locationX>459</locationX>
-        <locationY>155</locationY>
+        <locationX>314</locationX>
+        <locationY>398</locationY>
         <allowBack>true</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>true</allowPause>
@@ -141,14 +250,18 @@
             <dataType>String</dataType>
             <fieldText>Company</fieldText>
             <fieldType>InputField</fieldType>
-            <isRequired>false</isRequired>
+            <isRequired>true</isRequired>
         </fields>
         <fields>
             <name>Country</name>
             <dataType>String</dataType>
             <fieldText>Country</fieldText>
             <fieldType>InputField</fieldType>
-            <isRequired>false</isRequired>
+            <isRequired>true</isRequired>
+            <validationRule>
+                <errorMessage>&lt;p&gt;Please enter a Country (in the 2 character ISO-3166 country code format)&lt;/p&gt;</errorMessage>
+                <formulaExpression>REGEX({!Country}, &quot;\\w{2}&quot;)</formulaExpression>
+            </validationRule>
         </fields>
         <fields>
             <name>First_Name</name>
@@ -162,7 +275,7 @@
             <dataType>String</dataType>
             <fieldText>Last Name</fieldText>
             <fieldType>InputField</fieldType>
-            <isRequired>false</isRequired>
+            <isRequired>true</isRequired>
         </fields>
         <fields>
             <name>Edition</name>
@@ -182,6 +295,12 @@
             <name>Email</name>
             <extensionName>flowruntime:email</extensionName>
             <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>required</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </inputParameters>
             <isRequired>true</isRequired>
             <storeOutputAutomatically>true</storeOutputAutomatically>
         </fields>
@@ -208,7 +327,7 @@
             <dataType>String</dataType>
             <fieldText>Username</fieldText>
             <fieldType>InputField</fieldType>
-            <isRequired>false</isRequired>
+            <isRequired>true</isRequired>
         </fields>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
@@ -216,8 +335,8 @@
     <screens>
         <name>New_Provisioning_Request_Notes</name>
         <label>Notes</label>
-        <locationX>607</locationX>
-        <locationY>267</locationY>
+        <locationX>314</locationX>
+        <locationY>518</locationY>
         <allowBack>true</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>true</allowPause>
@@ -234,10 +353,33 @@
         <showHeader>true</showHeader>
     </screens>
     <screens>
+        <name>Provisioning_Request_Type</name>
+        <label>Provisioning Request Type</label>
+        <locationX>314</locationX>
+        <locationY>158</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <connector>
+            <targetReference>Existing_Org</targetReference>
+        </connector>
+        <fields>
+            <name>Is_this_an_existing_org</name>
+            <choiceReferences>Yes</choiceReferences>
+            <choiceReferences>No</choiceReferences>
+            <dataType>Boolean</dataType>
+            <fieldText>Is this an existing org?</fieldText>
+            <fieldType>RadioButtons</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
+    <screens>
         <name>Thank_you</name>
         <label>Thank you!</label>
-        <locationX>1019</locationX>
-        <locationY>272</locationY>
+        <locationX>314</locationX>
+        <locationY>854</locationY>
         <allowBack>true</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>true</allowPause>
@@ -250,10 +392,10 @@
         <showHeader>true</showHeader>
     </screens>
     <start>
-        <locationX>50</locationX>
-        <locationY>50</locationY>
+        <locationX>188</locationX>
+        <locationY>0</locationY>
         <connector>
-            <targetReference>New_Provisioning_Request</targetReference>
+            <targetReference>Provisioning_Request_Type</targetReference>
         </connector>
     </start>
     <status>Active</status>
