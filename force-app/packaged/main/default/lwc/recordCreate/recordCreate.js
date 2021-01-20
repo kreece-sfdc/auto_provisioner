@@ -7,8 +7,6 @@ export default class RecordCreate extends LightningElement {
     @api recId;
 
     handleSuccess(event){
-        console.log(event);
-        console.log(event.detail.id);
         this.dispatchEvent(new CustomEvent('success', {detail: event.detail.id}));
     }
 

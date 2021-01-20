@@ -20,7 +20,6 @@ export default class ManifestCanvas extends LightningElement {
     highlightedColumn = 'background: linear-gradient(#034485, #e6e6e6);'; //#c3faec
 
     connectedCallback(){
-        console.log(this.manifestId);
         this.resetColumns();
         this.createManifestPackages(null);
     }    
@@ -108,7 +107,6 @@ export default class ManifestCanvas extends LightningElement {
         Resets the allPackages property to reflect latest changes
     */
     paintCanvasWithPackages(event){
-        console.log('0');
         var newPackages = event.detail.filter(x => this.allPackages.indexOf(x) === -1 );
         var removedPackages = this.allPackages.filter(x => event.detail.indexOf(x) === -1);
 
@@ -120,7 +118,6 @@ export default class ManifestCanvas extends LightningElement {
                 }
             });
         });
-        console.log('0.5');
 
         if(removedPackages && removedPackages.length > 0){
             this.deleteManifestPackages(removedPackages);
@@ -128,10 +125,8 @@ export default class ManifestCanvas extends LightningElement {
         if(newPackages && newPackages.length > 0){
             this.createManifestPackages(newPackages );
         }
-        console.log('0.7');
         this.allPackages = event.detail;
         this.handleCloseModals();
-        console.log('1');
     }
 
     deleteManifestPackages(removedPackages){
@@ -339,16 +334,12 @@ export default class ManifestCanvas extends LightningElement {
         and sets their ordinal in accordance with their position.
     */
     setItemOrdinals(){
-        console.log('2');
         var flattenedColumns = this.getFlattenedColumns();
-        console.log(flattenedColumns);
-        console.log('3');
         this.columns.forEach(col => {
             col.items.forEach(item => {
                 item.ordinal = this.getItemIndexByValue(item.id, flattenedColumns, 'id');
             })
         });
-        console.log('4');
     }
     setNotSaved(){
         this.saveStyle = 'destructive';

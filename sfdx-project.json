@@ -13,13 +13,13 @@
             ]
         },
         {
-            "path": "force-app/unpackaged",
+            "path": "force-app/packaged",
             "default": false
         }
     ],
     "namespace": "aprv",
     "sfdcLoginUrl": "https://login.salesforce.com",
-    "sourceApiVersion": "48.0",
+    "sourceApiVersion": "50.0",
     "packageAliases": {
         "Multi Package Installer": "0Ho5p0000004CBYCA2",
         "Licence Management Application@1.20": "04t30000001DWL0AAO",

@@ -103,6 +103,10 @@ public with sharing class AuthHelper
             database.upsert(auth, Subscriber_Authentication__c.Org_Id__c);
 
             // this is where we need remote site settings to be created; naming convention is 'XX_Customer'
+            Map<String, String> urlsByInstances = new Map<String, String>();
+            urlsByInstances.put(auth.Org_Id__c, auth.Instance__c);
+            RemoteSiteSettingUtils.createRemoteSiteSettings(urlsByInstances);
+
             return true;
         }
 
